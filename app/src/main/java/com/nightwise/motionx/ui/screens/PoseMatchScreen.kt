@@ -71,12 +71,7 @@ import com.nightwise.motionx.games.pose.PoseMatcher
 import com.nightwise.motionx.games.pose.PoseSession
 import com.nightwise.motionx.games.pose.Tier
 import com.nightwise.motionx.tracking.PoseTracker
-import com.nightwise.motionx.ui.components.BackButton
-import com.nightwise.motionx.ui.components.GhostButton
-import com.nightwise.motionx.ui.components.GlowButton
-import com.nightwise.motionx.ui.components.ImmersiveGameMode
-import com.nightwise.motionx.ui.components.VSpace
-import com.nightwise.motionx.ui.components.rememberCameraTracking
+import com.nightwise.motionx.ui.components.*
 import com.nightwise.motionx.ui.theme.MX
 import kotlinx.coroutines.flow.MutableStateFlow
 import java.util.concurrent.atomic.AtomicReference
@@ -173,15 +168,15 @@ fun PoseMatchScreen(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 BackButton({ paused = true })
                 Column(Modifier.weight(1f).padding(start = 12.dp)) {
-                    Text("${tier.emoji} ${tier.label.uppercase()}", style = MaterialTheme.typography.labelMedium, color = accent)
+                    Text(tier.label.uppercase(), style = MaterialTheme.typography.labelMedium, color = accent)
                     Text(
                         "Pose ${(session.index + 1).coerceAtMost(session.poses.size)} / ${session.poses.size}",
                         style = MaterialTheme.typography.titleMedium, color = MX.TextHi,
                     )
                 }
                 Column(horizontalAlignment = Alignment.End) {
-                    Text("%,d".format(session.totalPoints), style = MaterialTheme.typography.titleLarge, color = MX.TextHi, fontWeight = FontWeight.Black)
-                    Text("★ ${session.totalStars}", style = MaterialTheme.typography.labelMedium, color = MX.Amber)
+                    Text("%,d".format(session.totalPoints), fontSize = 22.sp, color = MX.TextHi, fontWeight = FontWeight.Bold)
+                    IconStat(Ico.STAR, MX.Yellow, "${session.totalStars}")
                 }
             }
             VSpace(6.dp)
@@ -194,20 +189,20 @@ fun PoseMatchScreen(
                     HoldRing(session.holdProgress, pose.hold, session.matchedNow, Modifier.align(Alignment.BottomEnd).size(84.dp))
                     if (session.phase == PoseSession.Phase.INTRO) {
                         Text(
-                            "GET READY", Modifier.align(Alignment.TopCenter).clip(CircleShape).background(accent.copy(alpha = 0.2f))
-                                .border(1.dp, accent, CircleShape).padding(horizontal = 14.dp, vertical = 5.dp),
-                            style = MaterialTheme.typography.labelLarge, color = accent,
+                            "GET READY", Modifier.align(Alignment.TopCenter).clip(CircleShape).background(accent)
+                                .padding(horizontal = 14.dp, vertical = 5.dp),
+                            style = MaterialTheme.typography.labelLarge, color = Color.Black,
                         )
                     }
                 }
             }
             if (pose != null) {
-                Text("${pose.emoji}  ${pose.name}", style = MaterialTheme.typography.headlineMedium, color = MX.TextHi, maxLines = 1)
+                Text(pose.name, style = MaterialTheme.typography.headlineMedium, color = MX.TextHi, maxLines = 1)
                 Text(pose.cue, style = MaterialTheme.typography.bodyMedium, color = MX.TextMid, maxLines = 2)
                 VSpace(8.dp)
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     val frac = session.timeLeft / session.timeLimit
-                    Box(Modifier.weight(1f).height(8.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.08f))) {
+                    Box(Modifier.weight(1f).height(6.dp).clip(CircleShape).background(MX.SurfaceHi)) {
                         Box(
                             Modifier.fillMaxHeight().fillMaxWidth(frac).clip(CircleShape)
                                 .background(if (frac > 0.3f) accent else MX.Coral),
@@ -216,7 +211,7 @@ fun PoseMatchScreen(
                     Text(" ${session.timeLeft.toInt()}s", style = MaterialTheme.typography.labelLarge, color = MX.TextMid)
                     Box(Modifier.width(10.dp))
                     Text(
-                        "Skip ›", style = MaterialTheme.typography.labelLarge, color = MX.TextLow,
+                        "Skip", style = MaterialTheme.typography.labelLarge, color = MX.TextLow,
                         modifier = Modifier.clip(CircleShape).clickable { session.skip() }.padding(horizontal = 8.dp, vertical = 4.dp),
                     )
                 }
@@ -234,7 +229,7 @@ fun PoseMatchScreen(
                     Text(
                         "MATCH $pct%",
                         Modifier.clip(CircleShape).background(if (r.matched) MX.Lime else MX.GlassDark)
-                            .border(1.dp, if (r.matched) MX.Lime else MX.Stroke, CircleShape).padding(horizontal = 12.dp, vertical = 5.dp),
+                            .padding(horizontal = 12.dp, vertical = 5.dp),
                         style = MaterialTheme.typography.labelLarge, color = if (r.matched) MX.Night else MX.TextHi,
                     )
                 }
@@ -304,8 +299,8 @@ private fun HoldRing(progress: Float, holdSeconds: Float, matched: Boolean, modi
     Box(modifier, contentAlignment = Alignment.Center) {
         Canvas(Modifier.fillMaxSize()) {
             val sw = size.minDimension * 0.1f
-            drawCircle(Color.Black.copy(alpha = 0.4f))
-            drawCircle(Color.White.copy(alpha = 0.1f), radius = size.minDimension / 2 - sw / 2, style = Stroke(sw))
+            drawCircle(Color.Black.copy(alpha = 0.7f))
+            drawCircle((if (matched) MX.Lime else MX.Amber).copy(alpha = 0.18f), radius = size.minDimension / 2 - sw / 2, style = Stroke(sw))
             drawArc(
                 if (matched) MX.Lime else MX.Amber, -90f, 360f * p, false,
                 topLeft = androidx.compose.ui.geometry.Offset(sw / 2, sw / 2),
@@ -314,7 +309,7 @@ private fun HoldRing(progress: Float, holdSeconds: Float, matched: Boolean, modi
             )
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("%.1f".format((holdSeconds * (1 - p)).coerceAtLeast(0f)), fontSize = 20.sp, fontWeight = FontWeight.Black, color = MX.TextHi)
+            Text("%.1f".format((holdSeconds * (1 - p)).coerceAtLeast(0f)), fontSize = 20.sp, fontWeight = FontWeight.Bold, color = MX.TextHi)
             Text("HOLD", style = MaterialTheme.typography.labelSmall, color = MX.TextLow)
         }
     }
@@ -326,8 +321,8 @@ private fun BoxScope.FlashBanner(text: String, stars: Int) {
     val c = if (failed) MX.Coral else MX.Lime
     Box(Modifier.fillMaxSize().background(c.copy(alpha = 0.12f)))
     Column(Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(text, fontSize = 54.sp, fontWeight = FontWeight.Black, color = c)
-        if (!failed) Text("★".repeat(stars) + "☆".repeat(3 - stars), fontSize = 40.sp, color = MX.Amber)
+        Text(text, fontSize = 54.sp, fontWeight = FontWeight.Bold, color = c)
+        if (!failed) Stars(stars, max = 3, size = 40.dp)
         else Text("Next pose…", style = MaterialTheme.typography.titleLarge, color = MX.TextHi)
     }
 }
@@ -337,13 +332,12 @@ private fun PauseCard(onResume: () -> Unit, onSkip: () -> Unit, onQuit: () -> Un
     Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.6f)), contentAlignment = Alignment.Center) {
         Column(
             Modifier.widthIn(max = 420.dp).clip(RoundedCornerShape(28.dp))
-                .background(Brush.verticalGradient(listOf(Color(0xF51A2050), Color(0xF50C0F26))))
-                .border(1.dp, MX.Cyan.copy(alpha = 0.5f), RoundedCornerShape(28.dp)).padding(22.dp),
+                .background(MX.Surface).padding(22.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text("Paused", style = MaterialTheme.typography.displayMedium, color = MX.TextHi)
             VSpace(14.dp)
-            GlowButton("Resume", Modifier.fillMaxWidth(), leading = "▶", onClick = onResume)
+            GlowButton("Resume", Modifier.fillMaxWidth(), leading = Ico.PLAY, onClick = onResume)
             VSpace(10.dp)
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 GhostButton("Skip pose", Modifier.weight(1f), height = 46.dp, onClick = onSkip)
@@ -366,15 +360,14 @@ private fun TierResults(
     Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.65f)), contentAlignment = Alignment.Center) {
         Column(
             Modifier.widthIn(max = 640.dp).padding(14.dp).clip(RoundedCornerShape(28.dp))
-                .background(Brush.verticalGradient(listOf(Color(0xF51A2050), Color(0xF50C0F26))))
-                .border(1.dp, Brush.linearGradient(listOf(accent, MX.Violet.copy(alpha = 0.3f))), RoundedCornerShape(28.dp))
+                .background(MX.Surface)
                 .padding(20.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Text("${tier.emoji} ${tier.label.uppercase()} COMPLETE", style = MaterialTheme.typography.labelLarge, color = accent)
+            Text("${tier.label.uppercase()} COMPLETE", style = MaterialTheme.typography.labelLarge, color = accent)
             Text("%,d".format(session.totalPoints), style = MaterialTheme.typography.displayLarge, color = MX.TextHi)
             Text(
-                "${session.passedCount}/${session.poses.size} poses · ★ ${session.totalStars}/${session.poses.size * 3}",
+                "${session.passedCount}/${session.poses.size} poses · ${session.totalStars}/${session.poses.size * 3} stars",
                 style = MaterialTheme.typography.titleMedium, color = MX.TextMid,
             )
             VSpace(12.dp)
@@ -382,26 +375,26 @@ private fun TierResults(
                 session.results.forEach { res ->
                     Column(
                         Modifier.width(78.dp).clip(RoundedCornerShape(14.dp))
-                            .background((if (res.passed) accent else MX.Coral).copy(alpha = 0.1f))
+                            .background(MX.SurfaceHi)
                             .padding(6.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         PoseMannequin(res.pose, Modifier.size(56.dp), color = if (res.passed) accent else MX.Coral, animate = false)
                         Text(res.pose.name, style = MaterialTheme.typography.labelSmall, color = MX.TextHi, maxLines = 1, textAlign = TextAlign.Center)
-                        Text(if (res.passed) "★".repeat(res.stars) else "✕", fontSize = 12.sp, color = if (res.passed) MX.Amber else MX.Coral)
+                        if (res.passed) Stars(res.stars, max = 3, size = 10.dp) else Icon(Ico.CLOSE, MX.Coral, size = 12.dp)
                     }
                 }
             }
             if (nextTier != null) {
                 VSpace(10.dp)
-                Text("🔓 ${nextTier.label} unlocked!", style = MaterialTheme.typography.titleMedium, color = tierColor(nextTier))
+                Pill("${nextTier.label} unlocked", tierColor(nextTier), icon = Ico.UNLOCK)
             }
             VSpace(14.dp)
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 GhostButton("Map", Modifier.weight(1f), onClick = onMap)
-                GhostButton("Replay", Modifier.weight(1f), leading = "↻", onClick = onReplay)
+                GhostButton("Replay", Modifier.weight(1f), leading = Ico.REPLAY, onClick = onReplay)
                 if (nextTier != null) {
-                    GlowButton("Next tier", Modifier.weight(1.4f), height = 52.dp, leading = "▶") { onNext(nextTier) }
+                    GlowButton("Next tier", Modifier.weight(1.4f), height = 50.dp, leading = Ico.PLAY, color = accent) { onNext(nextTier) }
                 }
             }
         }

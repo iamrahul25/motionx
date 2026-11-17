@@ -13,7 +13,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -38,10 +40,7 @@ import com.nightwise.motionx.games.gate.GateDifficulty
 import com.nightwise.motionx.games.gate.GateGame
 import com.nightwise.motionx.games.gate.GateScene
 import com.nightwise.motionx.games.pose.PoseLibrary
-import com.nightwise.motionx.ui.components.AuroraBackground
-import com.nightwise.motionx.ui.components.GlowButton
-import com.nightwise.motionx.ui.components.ScreenHeader
-import com.nightwise.motionx.ui.components.VSpace
+import com.nightwise.motionx.ui.components.*
 import com.nightwise.motionx.ui.theme.MX
 
 fun gateColor(d: GateDifficulty): Color = when (d) {
@@ -72,18 +71,15 @@ fun GateLobbyScreen(prefs: Prefs, onBack: () -> Unit, onPlay: (GateDifficulty) -
     val prog = (t / 2.6f).coerceAtMost(1f)
     val passed = t > 2.6f
 
-    AuroraBackground(accentA = MX.Violet, accentB = accent, accentC = MX.Magenta) {
+    AuroraBackground {
         Row(
-            Modifier.fillMaxSize().safeDrawingPadding().padding(horizontal = 20.dp, vertical = 10.dp),
-            horizontalArrangement = Arrangement.spacedBy(20.dp),
+            Modifier.fillMaxSize().safeDrawingPadding().padding(horizontal = 24.dp, vertical = 14.dp),
+            horizontalArrangement = Arrangement.spacedBy(22.dp),
         ) {
             Column(Modifier.weight(1.1f).fillMaxHeight()) {
                 ScreenHeader("Pose Gate", "Match the hole, pass through the wall", onBack)
-                VSpace(10.dp)
-                Box(
-                    Modifier.weight(1f).fillMaxWidth().clip(RoundedCornerShape(24.dp))
-                        .border(1.dp, accent.copy(alpha = 0.5f), RoundedCornerShape(24.dp)),
-                ) {
+                VSpace(14.dp)
+                Box(Modifier.weight(1f).fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(MX.Surface)) {
                     GateScene(
                         previewPose, prog,
                         if (passed) GateGame.Outcome.PASS else GateGame.Outcome.NONE, (t - 2.6f).coerceAtLeast(0f),
@@ -91,47 +87,48 @@ fun GateLobbyScreen(prefs: Prefs, onBack: () -> Unit, onPlay: (GateDifficulty) -
                         Modifier.fillMaxSize(), showPlayer = false,
                     )
                 }
-            }
-            Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState())) {
-                Text("HOW IT WORKS", style = MaterialTheme.typography.labelMedium, color = MX.TextLow)
-                VSpace(6.dp)
-                Text(
-                    "A wall with a body-shaped hole flies at you. Copy the shape before it arrives and hold it while the rim glows green to pass through. Miss and the wall smashes — you lose a heart and the same shape comes back to retry.",
-                    style = MaterialTheme.typography.bodyMedium, color = MX.TextMid,
-                )
                 VSpace(12.dp)
-                GateDifficulty.entries.forEach { d ->
-                    val sel = d == diff
-                    val c = gateColor(d)
-                    Row(
-                        Modifier.fillMaxWidth().padding(vertical = 4.dp).clip(RoundedCornerShape(16.dp))
-                            .background(if (sel) c.copy(alpha = 0.16f) else Color.White.copy(alpha = 0.04f))
-                            .border(if (sel) 2.dp else 1.dp, if (sel) c else MX.StrokeSoft, RoundedCornerShape(16.dp))
-                            .clickable { diff = d; idx = 0; t = 0f }
-                            .padding(horizontal = 14.dp, vertical = 10.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(d.emoji, fontSize = 22.sp)
-                        Column(Modifier.weight(1f).padding(start = 12.dp)) {
-                            Text(d.label, style = MaterialTheme.typography.titleMedium, color = MX.TextHi)
-                            Text(d.desc, style = MaterialTheme.typography.labelSmall, color = MX.TextLow)
-                        }
-                        Column(horizontalAlignment = Alignment.End) {
-                            Text("♥".repeat(d.lives), color = MX.Magenta, fontSize = 12.sp)
-                            val best = prefs.gateBest(d.name)
-                            Text(if (best > 0) "Best %,d".format(best) else "—", style = MaterialTheme.typography.labelMedium, color = MX.Amber)
+                Text(
+                    "Copy the shape before the wall arrives and hold it while the rim turns green. Miss and you lose a heart.",
+                    style = MaterialTheme.typography.bodyMedium, color = MX.TextMid, maxLines = 2,
+                )
+            }
+            Column(Modifier.weight(1f).fillMaxHeight()) {
+                Text("DIFFICULTY", style = MaterialTheme.typography.labelMedium, color = MX.TextLow)
+                VSpace(10.dp)
+                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    GateDifficulty.entries.forEach { d ->
+                        val sel = d == diff
+                        val c = gateColor(d)
+                        Row(
+                            Modifier.fillMaxWidth().weight(1f).clip(RoundedCornerShape(16.dp))
+                                .background(MX.Surface)
+                                .border(1.5.dp, if (sel) c else Color.Transparent, RoundedCornerShape(16.dp))
+                                .clickable { diff = d; idx = 0; t = 0f }
+                                .padding(horizontal = 14.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Box(
+                                Modifier.size(36.dp).clip(CircleShape).background(c.copy(alpha = 0.16f)),
+                                contentAlignment = Alignment.Center,
+                            ) { Icon(d.icon(), c, size = 18.dp) }
+                            Column(Modifier.weight(1f).padding(start = 12.dp)) {
+                                Text(d.label, style = MaterialTheme.typography.titleMedium, color = MX.TextHi)
+                                Text(d.desc, style = MaterialTheme.typography.labelSmall, color = MX.TextLow, maxLines = 1)
+                            }
+                            Column(horizontalAlignment = Alignment.End) {
+                                Hearts(d.lives, d.lives, size = 11.dp)
+                                val best = prefs.gateBest(d.name)
+                                Text(if (best > 0) "Best %,d".format(best) else "No score yet", style = MaterialTheme.typography.labelSmall, color = MX.TextMid)
+                            }
                         }
                     }
                 }
                 VSpace(12.dp)
-                GlowButton(
-                    "Play ${diff.label}", Modifier.fillMaxWidth(), height = 60.dp, leading = "▶",
-                    brush = Brush.linearGradient(listOf(accent, MX.Violet)), glow = accent,
-                ) {
+                GlowButton("Play ${diff.label}", Modifier.fillMaxWidth(), height = 56.dp, leading = Ico.PLAY, color = accent) {
                     prefs.gateLastDifficulty = diff.ordinal
                     onPlay(diff)
                 }
-                VSpace(10.dp)
             }
         }
     }

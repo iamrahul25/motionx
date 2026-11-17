@@ -66,8 +66,8 @@ fun TrackingView(
         val ready = body.phase == BodyController.Phase.READY
         if (ready && showLines && !body.laneBoundLeft.isNaN()) {
             drawLanes(px(body.laneBoundLeft), px(body.laneBoundRight), oy, dh, ox, dw, body.lane)
-            drawGuide(py(body.jumpLineY), ox, dw, MX.Amber, if (body.handsUp) "▲ JUMP  ✋✋ READY" else "▲ JUMP  (hands up + jump)", body.jumping || body.handsUp)
-            drawGuide(py(body.duckLineY), ox, dw, MX.Sky, "▼ DUCK", body.ducking)
+            drawGuide(py(body.jumpLineY), ox, dw, MX.Amber, if (body.handsUp) "JUMP  ·  READY" else "JUMP  ·  hands up and jump", body.jumping || body.handsUp)
+            drawGuide(py(body.duckLineY), ox, dw, MX.Sky, "DUCK", body.ducking)
         } else if (!ready) {
             // Target box for calibration: stand in the middle.
             val bx = px(0.33f)
@@ -134,10 +134,7 @@ private fun DrawScope.drawLanes(left: Float, right: Float, top: Float, h: Float,
         if (x1 <= x0) continue
         val active = id == lane
         drawRect(
-            Brush.verticalGradient(
-                listOf(Color.Transparent, (if (active) MX.Cyan else Color.White).copy(alpha = if (active) 0.28f else 0.06f)),
-                startY = top, endY = top + h,
-            ),
+            (if (active) MX.Cyan else Color.White).copy(alpha = if (active) 0.18f else 0.04f),
             Offset(x0, top), Size(x1 - x0, h),
         )
     }

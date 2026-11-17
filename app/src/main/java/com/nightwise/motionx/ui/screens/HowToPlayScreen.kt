@@ -42,6 +42,9 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.text.SpanStyle
@@ -50,12 +53,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.nightwise.motionx.ui.components.AuroraBackground
-import com.nightwise.motionx.ui.components.GhostButton
-import com.nightwise.motionx.ui.components.GlowButton
-import com.nightwise.motionx.ui.components.ScreenHeader
-import com.nightwise.motionx.ui.components.VSpace
-import com.nightwise.motionx.ui.components.drawSkeleton
+import com.nightwise.motionx.ui.components.*
 import com.nightwise.motionx.ui.theme.MX
 import kotlinx.coroutines.launch
 import kotlin.math.PI
@@ -70,7 +68,7 @@ private fun Rich(text: String) {
     Text(
         buildAnnotatedString {
             parts.forEachIndexed { i, s ->
-                if (i % 2 == 1) withStyle(SpanStyle(color = MX.Amber, fontWeight = FontWeight.Bold)) { append(s) } else append(s)
+                if (i % 2 == 1) withStyle(SpanStyle(color = MX.TextHi, fontWeight = FontWeight.Bold)) { append(s) } else append(s)
             }
         },
         style = MaterialTheme.typography.bodyLarge.copy(fontSize = 18.sp, lineHeight = 27.sp),
@@ -91,19 +89,18 @@ fun HowToPlayScreen(onBack: () -> Unit, onTraining: () -> Unit) {
     val pager = rememberPagerState { pages.size }
     val scope = rememberCoroutineScope()
     AuroraBackground {
-        Column(Modifier.fillMaxSize().safeDrawingPadding().padding(horizontal = 20.dp, vertical = 10.dp)) {
+        Column(Modifier.fillMaxSize().safeDrawingPadding().padding(horizontal = 24.dp, vertical = 14.dp)) {
             ScreenHeader("How to play", "${pager.currentPage + 1} / ${pages.size}", onBack)
             VSpace(10.dp)
             HorizontalPager(pager, Modifier.weight(1f)) { i ->
                 val p = pages[i]
                 Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
                     Box(
-                        Modifier.weight(1f).fillMaxHeight().clip(RoundedCornerShape(26.dp))
-                            .background(Brush.verticalGradient(listOf(Color(0xFF141938), Color(0xFF0B0E22))))
-                            .border(1.dp, MX.StrokeSoft, RoundedCornerShape(26.dp)),
+                        Modifier.weight(1f).fillMaxHeight().clip(RoundedCornerShape(20.dp))
+                            .background(MX.Surface),
                     ) { p.art(Modifier.fillMaxSize()) }
                     Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState())) {
-                        Text(p.title, style = MaterialTheme.typography.displayMedium, color = MX.TextHi)
+                        Text(p.title, fontSize = 32.sp, fontWeight = FontWeight.Bold, color = MX.TextHi)
                         VSpace(12.dp)
                         Rich(p.body)
                     }
@@ -114,7 +111,7 @@ fun HowToPlayScreen(onBack: () -> Unit, onTraining: () -> Unit) {
                 repeat(pages.size) { i ->
                     val sel = i == pager.currentPage
                     val w by animateDpAsState(if (sel) 26.dp else 8.dp, label = "dot")
-                    val c by animateColorAsState(if (sel) MX.Cyan else Color.White.copy(alpha = 0.2f), label = "dotc")
+                    val c by animateColorAsState(if (sel) MX.Cyan else MX.SurfaceHi, label = "dotc")
                     Box(Modifier.padding(horizontal = 4.dp).height(8.dp).width(w).clip(CircleShape).background(c))
                 }
             }
@@ -123,9 +120,9 @@ fun HowToPlayScreen(onBack: () -> Unit, onTraining: () -> Unit) {
                     GhostButton("Back", Modifier.weight(1f), height = 50.dp) { scope.launch { pager.animateScrollToPage(pager.currentPage - 1) } }
                 }
                 if (pager.currentPage < pages.size - 1) {
-                    GlowButton("Next", Modifier.weight(2f), height = 52.dp) { scope.launch { pager.animateScrollToPage(pager.currentPage + 1) } }
+                    GlowButton("Next", Modifier.weight(2f), height = 50.dp) { scope.launch { pager.animateScrollToPage(pager.currentPage + 1) } }
                 } else {
-                    GlowButton("Start training run", Modifier.weight(2f), height = 52.dp, brush = MX.LimeGradient, glow = MX.Lime, onClick = onTraining)
+                    GlowButton("Start training run", Modifier.weight(2f), height = 50.dp, color = MX.Lime, leading = Ico.PLAY, onClick = onTraining)
                 }
             }
             }
@@ -152,19 +149,19 @@ private fun DrawScope.laneBackdrop(active: Int): FloatArray {
     for (i in 0..2) {
         val on = i - 1 == active
         drawRect(
-            Brush.verticalGradient(listOf(Color.Transparent, (if (on) MX.Cyan else Color.White).copy(alpha = if (on) 0.3f else 0.06f))),
+            (if (on) MX.Cyan else Color.White).copy(alpha = if (on) 0.18f else 0.04f),
             Offset(xs[i] - lw / 2, 0f), Size(lw, h),
         )
     }
     val dash = PathEffect.dashPathEffect(floatArrayOf(14f, 10f))
     drawLine(Color.White.copy(alpha = 0.7f), Offset(cx - lw / 2, 0f), Offset(cx - lw / 2, h), 3f, pathEffect = dash)
     drawLine(Color.White.copy(alpha = 0.7f), Offset(cx + lw / 2, 0f), Offset(cx + lw / 2, h), 3f, pathEffect = dash)
-    drawRect(Color(0x55223366), Offset(0f, h * 0.86f), Size(w, h * 0.14f))
+    drawRect(MX.SurfaceHi, Offset(0f, h * 0.86f), Size(w, h * 0.14f))
     val paint = android.graphics.Paint().apply {
         isAntiAlias = true; textSize = h * 0.08f; isFakeBoldText = true; textAlign = android.graphics.Paint.Align.CENTER
     }
     listOf("L", "C", "R").forEachIndexed { i, s ->
-        paint.color = if (i - 1 == active) 0xFF22E1FF.toInt() else 0xCCFFFFFF.toInt()
+        paint.color = if (i - 1 == active) MX.Cyan.toArgb() else 0xCCFFFFFF.toInt()
         drawContext.canvas.nativeCanvas.drawText(s, xs[i], h * 0.96f, paint)
     }
     return xs
@@ -187,25 +184,25 @@ private fun SetupArt(modifier: Modifier) {
         val w = size.width
         val h = size.height
         // floor
-        drawRect(Brush.verticalGradient(listOf(Color.Transparent, MX.Violet.copy(alpha = 0.18f)), startY = h * 0.6f), Offset(0f, h * 0.6f), Size(w, h * 0.4f))
+        drawLine(MX.Stroke, Offset(0f, h * 0.84f), Offset(w, h * 0.84f), 3f)
         // phone (landscape) on a stand
         val px = w * 0.2f
         val py = h * 0.5f
-        drawRoundRect(Color(0xFF2A3060), Offset(px - 38f, py - 24f), Size(76f, 48f), CornerRadius(8f))
-        drawRoundRect(MX.Cyan.copy(alpha = 0.6f), Offset(px - 32f, py - 18f), Size(64f, 36f), CornerRadius(4f))
-        drawLine(Color(0xFF2A3060), Offset(px, py + 24f), Offset(px, h * 0.82f), 6f)
-        drawLine(Color(0xFF2A3060), Offset(px - 24f, h * 0.82f), Offset(px + 24f, h * 0.82f), 6f)
+        drawRoundRect(MX.SurfaceHi, Offset(px - 38f, py - 24f), Size(76f, 48f), CornerRadius(8f))
+        drawRoundRect(MX.Cyan, Offset(px - 32f, py - 18f), Size(64f, 36f), CornerRadius(4f))
+        drawLine(MX.SurfaceHi, Offset(px, py + 24f), Offset(px, h * 0.82f), 6f)
+        drawLine(MX.SurfaceHi, Offset(px - 24f, h * 0.82f), Offset(px + 24f, h * 0.82f), 6f)
         // field of view cone
         drawPath(
             androidx.compose.ui.graphics.Path().apply {
                 moveTo(px + 34f, py); lineTo(w * 0.95f, h * 0.08f); lineTo(w * 0.95f, h * 0.92f); close()
             },
-            Brush.horizontalGradient(listOf(MX.Cyan.copy(alpha = 0.25f), Color.Transparent), startX = px, endX = w),
+            MX.Cyan.copy(alpha = 0.1f),
         )
         // distance arrow
         val ay = h * 0.9f
         drawLine(MX.Cyan, Offset(px + 30f, ay), Offset(w * 0.68f, ay), 3f)
-        val paint = android.graphics.Paint().apply { isAntiAlias = true; textSize = 34f; isFakeBoldText = true; color = 0xFF22E1FF.toInt(); textAlign = android.graphics.Paint.Align.CENTER }
+        val paint = android.graphics.Paint().apply { isAntiAlias = true; textSize = 34f; isFakeBoldText = true; color = MX.Cyan.toArgb(); textAlign = android.graphics.Paint.Align.CENTER }
         drawContext.canvas.nativeCanvas.drawText("2–3 m", (px + w * 0.68f) / 2, ay - 12f, paint)
         // person (breathing bob)
         drawSkeleton(Offset(w * 0.74f, h * 0.84f - sin(t * 2 * PI.toFloat()) * 3f), h * 0.66f, color = Color.White)
@@ -247,7 +244,7 @@ private fun JumpArt(modifier: Modifier) {
             t < 0.92f -> 1f - (t - 0.8f) / 0.12f
             else -> 0f
         }
-        guideLine(lineY, MX.Amber, if (arms > 0.9f) "▲ JUMP  ✋✋" else "▲ JUMP")
+        guideLine(lineY, MX.Amber, if (arms > 0.9f) "JUMP  ·  hands up" else "JUMP")
         drawSkeleton(Offset(xs[1], h * 0.84f - jump * h * 0.16f), h * 0.72f, squat = crouch, armsUp = arms, color = if (jumping) MX.Amber else Color.White)
     }
 }
@@ -266,7 +263,7 @@ private fun DuckArt(modifier: Modifier) {
             else -> 0f
         }
         val lineY = h * 0.3f
-        guideLine(lineY, MX.Sky, "▼ DUCK")
+        guideLine(lineY, MX.Sky, "DUCK")
         drawSkeleton(Offset(xs[1], h * 0.84f), h * 0.72f, squat = squat, color = if (squat > 0.8f) MX.Sky else Color.White)
     }
 }
@@ -274,16 +271,16 @@ private fun DuckArt(modifier: Modifier) {
 @Composable
 private fun LegendArt(modifier: Modifier) {
     val rows = listOf(
-        Triple(MX.Amber, "Yellow hurdle", "▲ Jump"),
-        Triple(MX.Sky, "Blue bar", "▼ Duck"),
-        Triple(MX.Coral, "Red wall", "◀ ▶ Hop"),
-        Triple(MX.Amber, "Coin", "+10"),
-        Triple(Color.White, "Star", "+100"),
+        Triple(MX.Amber, "Orange hurdle", "Jump"),
+        Triple(MX.Sky, "Blue bar", "Duck"),
+        Triple(MX.Coral, "Red wall", "Hop aside"),
+        Triple(MX.Yellow, "Coin", "+10"),
+        Triple(MX.Yellow, "Star", "+100"),
     )
     Column(modifier.padding(14.dp), verticalArrangement = Arrangement.SpaceEvenly) {
         rows.forEachIndexed { i, (c, name, act) ->
             Row(
-                Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Color.White.copy(alpha = 0.05f)).padding(horizontal = 12.dp, vertical = 6.dp),
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(MX.SurfaceHi).padding(horizontal = 12.dp, vertical = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Canvas(Modifier.size(width = 40.dp, height = 24.dp)) {
@@ -321,7 +318,8 @@ private fun ReadyArt(modifier: Modifier) {
     Canvas(modifier) {
         val h = size.height
         val w = size.width
-        drawCircle(Brush.radialGradient(listOf(MX.Lime.copy(alpha = 0.25f), Color.Transparent), Offset(w / 2, h / 2), h * 0.6f), h * 0.6f, Offset(w / 2, h / 2))
-        drawSkeleton(Offset(w / 2, h * 0.88f), h * 0.76f, runPhase = t * 2 * PI.toFloat(), color = MX.Lime)
+        drawArc(MX.Lime.copy(alpha = 0.18f), 0f, 360f, false, Offset(w / 2 - h * 0.42f, h * 0.06f), Size(h * 0.84f, h * 0.84f), style = Stroke(h * 0.035f))
+        drawArc(MX.Lime, -90f, 360f * t, false, Offset(w / 2 - h * 0.42f, h * 0.06f), Size(h * 0.84f, h * 0.84f), style = Stroke(h * 0.035f, cap = StrokeCap.Round))
+        drawSkeleton(Offset(w / 2, h * 0.8f), h * 0.6f, runPhase = t * 2 * PI.toFloat(), color = MX.Lime)
     }
 }

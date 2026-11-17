@@ -61,6 +61,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
@@ -79,7 +80,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.nightwise.motionx.audio.Sfx
 import com.nightwise.motionx.audio.VoiceCoach
-import com.nightwise.motionx.ui.components.Segmented
+import com.nightwise.motionx.ui.components.*
 import com.nightwise.motionx.data.Prefs
 import com.nightwise.motionx.data.RunResult
 import com.nightwise.motionx.games.runner.RunnerConfig
@@ -91,10 +92,7 @@ import com.nightwise.motionx.tracking.BodyController
 import com.nightwise.motionx.tracking.PoseFrame
 import com.nightwise.motionx.tracking.PoseTracker
 import com.nightwise.motionx.tracking.TrackingView
-import com.nightwise.motionx.ui.components.GhostButton
-import com.nightwise.motionx.ui.components.GlowButton
-import com.nightwise.motionx.ui.components.StatTile
-import com.nightwise.motionx.ui.components.VSpace
+import com.nightwise.motionx.ui.components.*
 import com.nightwise.motionx.ui.theme.MX
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -292,7 +290,7 @@ fun RunnerGameScreen(config: RunnerConfig, prefs: Prefs, sfx: Sfx, onExit: () ->
                     onHome = onExit,
                 )
                 !hasCam && !touchMode -> CenterCard {
-                    Text("📷", fontSize = 40.sp)
+                    Icon(Ico.CAMERA, MX.Cyan, size = 40.dp)
                     VSpace(8.dp)
                     Text("Camera needed", style = MaterialTheme.typography.headlineMedium, color = MX.TextHi)
                     Text(
@@ -303,7 +301,7 @@ fun RunnerGameScreen(config: RunnerConfig, prefs: Prefs, sfx: Sfx, onExit: () ->
                     VSpace(16.dp)
                     GlowButton("Allow camera", Modifier.fillMaxWidth()) { launcher.launch(Manifest.permission.CAMERA) }
                     VSpace(10.dp)
-                    GhostButton("Play with touch", Modifier.fillMaxWidth(), leading = "👆") { touchMode = true }
+                    GhostButton("Play with touch", Modifier.fillMaxWidth(), leading = Ico.HAND) { touchMode = true }
                 }
                 userPaused && hud.phase != RunnerGame.Phase.OVER -> PauseOverlay(
                     training = config.training,
@@ -368,13 +366,15 @@ private fun BoxScope.Hud(
         // lives
         HudChip {
             if (config.lives == 0) {
-                Text("♥ ∞", color = MX.Magenta, fontWeight = FontWeight.Black, fontSize = 18.sp)
+                Icon(Ico.HEART, MX.Magenta, size = 18.dp)
+                Box(Modifier.width(6.dp))
+                Icon(Ico.INFINITY, MX.TextHi, size = 18.dp)
             } else {
                 Row {
                     repeat(config.lives) { i ->
                         val alive = i < hud.lives
                         val s by animateFloatAsState(if (alive) 1f else 0.75f, label = "heart")
-                        Text("♥", color = if (alive) MX.Magenta else Color.White.copy(alpha = 0.18f), fontSize = 20.sp, modifier = Modifier.scale(s).padding(horizontal = 1.dp))
+                        Icon(Ico.HEART, if (alive) MX.Magenta else MX.SurfaceHi, Modifier.scale(s).padding(horizontal = 2.dp), size = 18.dp)
                     }
                 }
             }
@@ -383,30 +383,24 @@ private fun BoxScope.Hud(
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     "%,d".format(hud.score),
-                    style = MaterialTheme.typography.displayMedium.copy(fontSize = 34.sp),
+                    fontSize = 36.sp, fontWeight = FontWeight.Bold,
                     color = MX.TextHi,
                 )
-                Text("SCORE ×${config.scoreMultiplier}", style = MaterialTheme.typography.labelSmall, color = MX.Cyan)
+                Text("SCORE x${config.scoreMultiplier}", style = MaterialTheme.typography.labelSmall, color = MX.Cyan)
                 AnimatedVisibility(hud.combo >= 5, enter = scaleIn() + fadeIn(), exit = fadeOut()) {
-                    Text("COMBO ×${hud.combo}", style = MaterialTheme.typography.labelLarge, color = MX.Lime, modifier = Modifier.padding(top = 4.dp))
+                    Text("COMBO x${hud.combo}", style = MaterialTheme.typography.labelLarge, color = MX.Lime, modifier = Modifier.padding(top = 4.dp))
                 }
             }
         }
         HudChip {
-            Box(Modifier.size(14.dp).clip(CircleShape).background(MX.Amber))
-            Text("  ${hud.coins}", color = MX.TextHi, fontWeight = FontWeight.Black, fontSize = 18.sp)
-            if (hud.stars > 0) Text("   ★ ${hud.stars}", color = MX.Amber, fontWeight = FontWeight.Black, fontSize = 18.sp)
+            IconStat(Ico.COIN, MX.Yellow, "${hud.coins}")
+            if (hud.stars > 0) { Box(Modifier.width(12.dp)); IconStat(Ico.STAR, MX.Yellow, "${hud.stars}") }
         }
         Box(Modifier.width(10.dp))
         Box(
-            Modifier.size(44.dp).clip(CircleShape).background(MX.GlassDark).border(1.dp, MX.Stroke, CircleShape).clickable(onClick = onPause),
+            Modifier.size(44.dp).clip(CircleShape).background(MX.GlassDark).clickable(onClick = onPause),
             contentAlignment = Alignment.Center,
-        ) {
-            Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-                Box(Modifier.size(width = 5.dp, height = 16.dp).clip(RoundedCornerShape(2.dp)).background(MX.TextHi))
-                Box(Modifier.size(width = 5.dp, height = 16.dp).clip(RoundedCornerShape(2.dp)).background(MX.TextHi))
-            }
-        }
+        ) { Icon(Ico.PAUSE, MX.TextHi, size = 16.dp) }
     }
     // speed + distance
     Row(Modifier.align(Alignment.BottomStart).padding(14.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -414,17 +408,17 @@ private fun BoxScope.Hud(
             Column {
                 Text("SPEED", style = MaterialTheme.typography.labelSmall, color = MX.TextLow)
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("%.1f".format(hud.speedLevel), color = MX.TextHi, fontWeight = FontWeight.Black, fontSize = 18.sp)
+                    Text("%.1f".format(hud.speedLevel), color = MX.TextHi, fontWeight = FontWeight.Bold, fontSize = 18.sp)
                     Box(Modifier.width(8.dp))
-                    Box(Modifier.size(70.dp, 6.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.1f))) {
-                        Box(Modifier.fillMaxHeight().fillMaxWidth(hud.speedLevel / 10f).clip(CircleShape).background(MX.PrimaryGradient))
+                    Box(Modifier.size(70.dp, 6.dp).clip(CircleShape).background(MX.SurfaceHi)) {
+                        Box(Modifier.fillMaxHeight().fillMaxWidth(hud.speedLevel / 10f).clip(CircleShape).background(MX.Cyan))
                     }
                 }
             }
             Box(Modifier.width(16.dp))
             Column {
                 Text("DISTANCE", style = MaterialTheme.typography.labelSmall, color = MX.TextLow)
-                Text("${hud.distance.toInt()} m", color = MX.TextHi, fontWeight = FontWeight.Black, fontSize = 18.sp)
+                Text("${hud.distance.toInt()} m", color = MX.TextHi, fontWeight = FontWeight.Bold, fontSize = 18.sp)
             }
         }
     }
@@ -433,7 +427,7 @@ private fun BoxScope.Hud(
 @Composable
 private fun HudChip(content: @Composable () -> Unit) {
     Row(
-        Modifier.clip(RoundedCornerShape(16.dp)).background(MX.GlassDark).border(1.dp, MX.StrokeSoft, RoundedCornerShape(16.dp))
+        Modifier.clip(RoundedCornerShape(16.dp)).background(MX.GlassDark)
             .padding(horizontal = 14.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) { content() }
@@ -443,9 +437,7 @@ private fun HudChip(content: @Composable () -> Unit) {
 private fun HitFlash(v: Float) {
     if (v <= 0f) return
     Box(
-        Modifier.fillMaxSize().background(
-            Brush.radialGradient(listOf(Color.Transparent, MX.Coral.copy(alpha = (v * 1.1f).coerceAtMost(0.55f))), radius = 1400f),
-        ),
+        Modifier.fillMaxSize().border(10.dp, MX.Coral.copy(alpha = (v * 1.1f).coerceAtMost(0.8f))),
     )
 }
 
@@ -456,7 +448,7 @@ private fun BoxScope.Countdown(t: Float) {
     Box(Modifier.align(Alignment.Center), contentAlignment = Alignment.Center) {
         Text(
             if (t > 0.05f) "$n" else "GO!",
-            fontSize = 120.sp, fontWeight = FontWeight.Black,
+            fontSize = 120.sp, fontWeight = FontWeight.Bold,
             color = when (n) { 3 -> MX.Magenta; 2 -> MX.Amber; else -> MX.Lime },
             modifier = Modifier.scale(0.8f + frac * 0.5f),
         )
@@ -467,12 +459,11 @@ private fun BoxScope.Countdown(t: Float) {
 
 @Composable
 private fun BoxScope.CenterCard(content: @Composable () -> Unit) {
-    Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.45f)))
+    Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.65f)))
     Column(
         Modifier.align(Alignment.Center).widthIn(max = 420.dp).padding(16.dp)
             .clip(RoundedCornerShape(28.dp))
-            .background(Brush.verticalGradient(listOf(Color(0xF01A2050), Color(0xF00C0F26))))
-            .border(1.dp, Brush.linearGradient(listOf(MX.Cyan.copy(alpha = 0.6f), MX.Violet.copy(alpha = 0.2f))), RoundedCornerShape(28.dp))
+            .background(MX.Surface)
             .padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) { content() }
@@ -496,14 +487,15 @@ private fun BoxScope.GetReadyOverlay(
         val spin by pulse.animateFloat(0f, 360f, infiniteRepeatable(tween(2400)), label = "spin")
         Box(Modifier.size(96.dp), contentAlignment = Alignment.Center) {
             Canvas(Modifier.fillMaxSize()) {
-                drawCircle(Color.White.copy(alpha = 0.08f), style = Stroke(8.dp.toPx()))
+                drawCircle(ringColor.copy(alpha = 0.18f), style = Stroke(8.dp.toPx()))
                 if (calibrating) {
                     drawArc(ringColor, -90f, 360f * body.calibration, false, style = Stroke(8.dp.toPx(), cap = StrokeCap.Round))
                 } else {
                     drawArc(ringColor, spin, 80f, false, style = Stroke(8.dp.toPx(), cap = StrokeCap.Round))
                 }
             }
-            Text(if (calibrating) "${(body.calibration * 100).toInt()}%" else "🧍", fontSize = if (calibrating) 20.sp else 34.sp, color = MX.TextHi, fontWeight = FontWeight.Black)
+            if (calibrating) Text("${(body.calibration * 100).toInt()}%", fontSize = 20.sp, color = MX.TextHi, fontWeight = FontWeight.Bold)
+            else Icon(Ico.PERSON, MX.TextHi, size = 34.dp)
         }
         VSpace(14.dp)
         Text(
@@ -526,13 +518,13 @@ private fun BoxScope.GetReadyOverlay(
         )
         VSpace(6.dp)
         Text(
-            "Phone at waist height, landscape · stand 2–3 m back in the middle box · whole body visible",
+            "Phone at waist height in landscape. Stand 2–3 m back in the middle box with your whole body visible.",
             style = MaterialTheme.typography.bodyMedium, color = MX.TextLow, textAlign = TextAlign.Center,
         )
         VSpace(16.dp)
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             GhostButton("Back", Modifier.weight(1f), height = 46.dp, onClick = onBack)
-            GhostButton("Touch mode", Modifier.weight(1f), leading = "👆", height = 46.dp, onClick = onTouch)
+            GhostButton("Touch mode", Modifier.weight(1f), leading = Ico.HAND, height = 46.dp, onClick = onTouch)
         }
     }
 }
@@ -549,18 +541,19 @@ private fun BoxScope.PauseOverlay(
 ) {
     CenterCard {
         Text("Paused", style = MaterialTheme.typography.displayMedium, color = MX.TextHi)
-        Text("Take a breather 💨", color = MX.TextMid)
+        Text("Take a breather", color = MX.TextMid)
         VSpace(18.dp)
-        GlowButton("Resume", Modifier.fillMaxWidth(), leading = "▶", onClick = onResume)
+        GlowButton("Resume", Modifier.fillMaxWidth(), leading = Ico.PLAY, onClick = onResume)
         VSpace(12.dp)
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("🔊  Voice assist", style = MaterialTheme.typography.titleMedium, color = MX.TextHi, modifier = Modifier.weight(1f))
+            Icon(Ico.SOUND, MX.Lime, size = 18.dp)
+            Text("  Voice assist", style = MaterialTheme.typography.titleMedium, color = MX.TextHi, modifier = Modifier.weight(1f))
             Segmented(listOf("On", "Off"), if (assistOn) 0 else 1, { onAssist(it == 0) }, Modifier.width(150.dp), accent = MX.Lime)
         }
         VSpace(12.dp)
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            GhostButton("Recenter", Modifier.weight(1f), leading = "🎯", height = 46.dp, onClick = onRecalibrate)
-            if (training) GhostButton("Finish", Modifier.weight(1f), leading = "🏁", height = 46.dp, onClick = onFinish)
+            GhostButton("Recenter", Modifier.weight(1f), leading = Ico.TARGET, height = 46.dp, onClick = onRecalibrate)
+            if (training) GhostButton("Finish", Modifier.weight(1f), leading = Ico.FLAG, height = 46.dp, onClick = onFinish)
             GhostButton("Quit", Modifier.weight(1f), height = 46.dp, accent = MX.Coral, onClick = onQuit)
         }
     }
@@ -568,25 +561,22 @@ private fun BoxScope.PauseOverlay(
 
 @Composable
 private fun BoxScope.ResultsOverlay(r: RunResult, config: RunnerConfig, onAgain: () -> Unit, onHome: () -> Unit) {
-    Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.55f)))
+    Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.7f)))
     Column(
         Modifier.align(Alignment.Center).widthIn(max = 560.dp).padding(14.dp)
             .clip(RoundedCornerShape(28.dp))
-            .background(Brush.verticalGradient(listOf(Color(0xF51A2050), Color(0xF50C0F26))))
-            .border(1.dp, Brush.linearGradient(listOf(MX.Magenta.copy(alpha = 0.7f), MX.Cyan.copy(alpha = 0.3f))), RoundedCornerShape(28.dp))
+            .background(MX.Surface)
             .padding(20.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(if (config.training) "TRAINING DONE" else "RUN COMPLETE", style = MaterialTheme.typography.labelLarge, color = MX.Cyan)
-                Text("%,d".format(r.score), style = MaterialTheme.typography.displayLarge, color = MX.TextHi)
-                Text("${config.emoji} ${config.preset} · ×${config.scoreMultiplier}", color = MX.TextMid)
+                Text("%,d".format(r.score), fontSize = 52.sp, fontWeight = FontWeight.Bold, color = MX.TextHi)
+                Text("${config.preset} · score x${config.scoreMultiplier}", color = MX.TextMid)
             }
             if (r.newBest) {
-                Box(
-                    Modifier.clip(RoundedCornerShape(14.dp)).background(MX.HotGradient).padding(horizontal = 14.dp, vertical = 8.dp),
-                ) { Text("🏆 NEW BEST", fontWeight = FontWeight.Black, color = Color.White) }
+                Pill("NEW BEST", MX.Yellow, icon = Ico.TROPHY)
             }
         }
         VSpace(14.dp)
@@ -606,7 +596,7 @@ private fun BoxScope.ResultsOverlay(r: RunResult, config: RunnerConfig, onAgain:
         VSpace(16.dp)
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             GhostButton("Home", Modifier.weight(1f), onClick = onHome)
-            GlowButton("Play again", Modifier.weight(1.6f), height = 52.dp, leading = "↻", onClick = onAgain)
+            GlowButton("Play again", Modifier.weight(1.6f), height = 50.dp, leading = Ico.REPLAY, onClick = onAgain)
         }
     }
 }
@@ -628,14 +618,6 @@ private fun TrackingPanel(
     Box(modifier.background(MX.Night)) {
         // Full-height camera: head to feet, sides cropped around the centre lane.
         TrackingView(frame, body, Modifier.fillMaxSize(), fill = true)
-        Box(
-            Modifier.fillMaxWidth().height(70.dp).align(Alignment.TopCenter)
-                .background(Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.65f), Color.Transparent))),
-        )
-        Box(
-            Modifier.fillMaxWidth().height(70.dp).align(Alignment.BottomCenter)
-                .background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.7f)))),
-        )
         Box(Modifier.fillMaxHeight().width(2.dp).align(Alignment.CenterStart).background(MX.Cyan.copy(alpha = 0.5f)))
         Row(Modifier.align(Alignment.TopStart).fillMaxWidth().padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.size(9.dp).clip(CircleShape).background(MX.Coral.copy(alpha = if (status == PoseTracker.Status.RUNNING) dot else 0.3f)))
@@ -644,13 +626,13 @@ private fun TrackingPanel(
                 if (frame != null) Text("${frame.fps.toInt()} fps · ${if (gpu) "GPU" else "CPU"}", style = MaterialTheme.typography.labelSmall, color = MX.TextLow)
             }
             Box(
-                Modifier.size(36.dp).clip(CircleShape).background(MX.GlassDark).border(1.dp, MX.Stroke, CircleShape).clickable(onClick = onRecenter),
+                Modifier.size(36.dp).clip(CircleShape).background(MX.GlassDark).clickable(onClick = onRecenter),
                 contentAlignment = Alignment.Center,
-            ) { Text("⟲", color = MX.Cyan, fontSize = 18.sp, fontWeight = FontWeight.Black) }
+            ) { Icon(Ico.TARGET, MX.Cyan, size = 16.dp) }
         }
         if (touchMode) {
             Text(
-                "Touch mode · swipe",
+                "Touch mode: swipe",
                 Modifier.align(Alignment.Center).clip(CircleShape).background(MX.GlassDark).padding(horizontal = 10.dp, vertical = 4.dp),
                 style = MaterialTheme.typography.labelSmall, color = MX.Amber,
             )
@@ -675,7 +657,7 @@ private fun TrackingPanel(
 @Composable
 private fun MoveStrip(lane: Int, jumping: Boolean, ducking: Boolean, modifier: Modifier) {
     Row(
-        modifier.clip(RoundedCornerShape(16.dp)).background(MX.GlassDark).border(1.dp, MX.StrokeSoft, RoundedCornerShape(16.dp))
+        modifier.clip(RoundedCornerShape(16.dp)).background(MX.GlassDark)
             .padding(6.dp),
         horizontalArrangement = Arrangement.spacedBy(5.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -683,13 +665,13 @@ private fun MoveStrip(lane: Int, jumping: Boolean, ducking: Boolean, modifier: M
         listOf(-1 to "L", 0 to "C", 1 to "R").forEach { (id, s) ->
             val on = lane == id
             Box(
-                Modifier.size(34.dp).clip(RoundedCornerShape(10.dp)).background(if (on) MX.Cyan else Color.White.copy(alpha = 0.06f)),
+                Modifier.size(34.dp).clip(RoundedCornerShape(10.dp)).background(if (on) MX.Cyan else MX.SurfaceHi),
                 contentAlignment = Alignment.Center,
-            ) { Text(s, fontWeight = FontWeight.Black, color = if (on) MX.Night else MX.TextLow) }
+            ) { Text(s, fontWeight = FontWeight.Bold, color = if (on) MX.Night else MX.TextLow) }
         }
         Box(Modifier.width(4.dp))
-        ActionChip("▲", jumping, MX.Amber, Modifier.width(40.dp))
-        ActionChip("▼", ducking, MX.Sky, Modifier.width(40.dp))
+        ActionChip(Ico.UP, jumping, MX.Amber, Modifier.width(40.dp))
+        ActionChip(Ico.DOWN, ducking, MX.Sky, Modifier.width(40.dp))
     }
 }
 
@@ -707,23 +689,21 @@ private fun BoxScope.CueBanner(cue: RunnerGame.Action?, age: Float) {
     Text(
         cue.label,
         Modifier.align(Alignment.Center).padding(bottom = 90.dp).scale(pop)
-            .clip(RoundedCornerShape(20.dp)).background(color.copy(alpha = 0.22f * alpha))
-            .border(2.dp, color.copy(alpha = alpha), RoundedCornerShape(20.dp))
+            .clip(CircleShape).background(color.copy(alpha = alpha))
             .padding(horizontal = 22.dp, vertical = 10.dp),
-        fontSize = 34.sp, fontWeight = FontWeight.Black, color = color.copy(alpha = alpha),
+        fontSize = 30.sp, fontWeight = FontWeight.Bold, color = Color.Black.copy(alpha = alpha),
     )
 }
 
 @Composable
-private fun ActionChip(label: String, on: Boolean, color: Color, modifier: Modifier) {
+private fun ActionChip(label: Ico, on: Boolean, color: Color, modifier: Modifier) {
     val a by animateFloatAsState(if (on) 1f else 0f, tween(90), label = "chip")
     Box(
         modifier.height(34.dp).clip(RoundedCornerShape(10.dp))
-            .background(color.copy(alpha = 0.08f + 0.85f * a))
-            .border(1.dp, color.copy(alpha = 0.4f), RoundedCornerShape(10.dp)),
+            .background(lerp(MX.SurfaceHi, color, a)),
         contentAlignment = Alignment.Center,
     ) {
-        Text(label, fontWeight = FontWeight.Black, fontSize = 13.sp, color = if (a > 0.5f) MX.Night else color)
+        Icon(label, if (a > 0.5f) MX.Night else color, size = 14.dp)
     }
 }
 

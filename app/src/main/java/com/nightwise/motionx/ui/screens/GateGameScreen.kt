@@ -59,12 +59,7 @@ import com.nightwise.motionx.games.pose.PoseDef
 import com.nightwise.motionx.games.pose.PoseMatcher
 import com.nightwise.motionx.tracking.Lm
 import com.nightwise.motionx.tracking.PoseTracker
-import com.nightwise.motionx.ui.components.GhostButton
-import com.nightwise.motionx.ui.components.GlowButton
-import com.nightwise.motionx.ui.components.ImmersiveGameMode
-import com.nightwise.motionx.ui.components.StatTile
-import com.nightwise.motionx.ui.components.VSpace
-import com.nightwise.motionx.ui.components.rememberCameraTracking
+import com.nightwise.motionx.ui.components.*
 import com.nightwise.motionx.ui.theme.MX
 import kotlinx.coroutines.flow.MutableStateFlow
 import java.util.concurrent.atomic.AtomicReference
@@ -200,7 +195,7 @@ fun GateGameScreen(difficulty: GateDifficulty, prefs: Prefs, sfx: Sfx, onExit: (
             PoseCameraView(frame, r, Modifier.fillMaxSize(), fill = true)
             Box(Modifier.fillMaxHeight().width(2.dp).align(Alignment.CenterStart).background(accent.copy(alpha = 0.5f)))
             Text(
-                if (r?.matched == true) "✓ MATCH" else (r?.hint ?: "Step into view"),
+                if (r?.matched == true) "MATCH" else (r?.hint ?: "Step into view"),
                 Modifier.align(Alignment.BottomCenter).padding(10.dp).clip(CircleShape)
                     .background(if (r?.matched == true) MX.Lime else MX.GlassDark).padding(horizontal = 12.dp, vertical = 6.dp),
                 style = MaterialTheme.typography.labelLarge, color = if (r?.matched == true) MX.Night else MX.TextHi, maxLines = 1,
@@ -219,25 +214,20 @@ fun GateGameScreen(difficulty: GateDifficulty, prefs: Prefs, sfx: Sfx, onExit: (
 private fun BoxScope.GateHud(game: GateGame, accent: Color, showPose: Boolean, onTogglePose: () -> Unit, onPause: () -> Unit) {
     Row(Modifier.align(Alignment.TopCenter).fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.Top) {
         Chip {
-            Row {
-                repeat(game.difficulty.lives) { i ->
-                    Text("♥", color = if (i < game.lives) MX.Magenta else Color.White.copy(alpha = 0.18f), fontSize = 20.sp)
-                }
-            }
+            Hearts(game.lives, game.difficulty.lives, size = 18.dp)
         }
         Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("%,d".format(game.score), style = MaterialTheme.typography.displayMedium.copy(fontSize = 32.sp), color = MX.TextHi)
-            if (game.combo >= 2) Text("COMBO ×${game.combo}", style = MaterialTheme.typography.labelLarge, color = MX.Lime)
+            Text("%,d".format(game.score), fontSize = 34.sp, fontWeight = FontWeight.Bold, color = MX.TextHi)
+            if (game.combo >= 2) Text("COMBO x${game.combo}", style = MaterialTheme.typography.labelLarge, color = MX.Lime)
         }
         // show / hide the player's figure on the stage
         Row(
             Modifier.height(44.dp).clip(CircleShape)
-                .background(if (showPose) MX.Lime.copy(alpha = 0.18f) else MX.GlassDark)
-                .border(1.dp, if (showPose) MX.Lime else MX.Stroke, CircleShape)
+                .background(MX.GlassDark)
                 .clickable(onClick = onTogglePose).padding(horizontal = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(if (showPose) "👁" else "🚫", fontSize = 16.sp)
+            Icon(if (showPose) Ico.EYE else Ico.EYE_OFF, if (showPose) MX.Lime else MX.TextMid, size = 16.dp)
             Text(
                 if (showPose) "  Pose on" else "  Pose off",
                 style = MaterialTheme.typography.labelLarge, color = if (showPose) MX.Lime else MX.TextMid,
@@ -245,9 +235,9 @@ private fun BoxScope.GateHud(game: GateGame, accent: Color, showPose: Boolean, o
         }
         Box(Modifier.width(8.dp))
         Box(
-            Modifier.size(44.dp).clip(CircleShape).background(MX.GlassDark).border(1.dp, MX.Stroke, CircleShape).clickable(onClick = onPause),
+            Modifier.size(44.dp).clip(CircleShape).background(MX.GlassDark).clickable(onClick = onPause),
             contentAlignment = Alignment.Center,
-        ) { Text("❚❚", color = MX.TextHi, fontWeight = FontWeight.Black) }
+        ) { Icon(Ico.PAUSE, MX.TextHi, size = 16.dp) }
     }
     // approach bar + hold meter
     if (game.phase == GateGame.Phase.RUNNING) {
@@ -256,19 +246,19 @@ private fun BoxScope.GateHud(game: GateGame, accent: Color, showPose: Boolean, o
                 Text(
                     if (game.matchedNow) "HOLD IT!" else "MATCH THE HOLE!",
                     Modifier.align(Alignment.CenterHorizontally),
-                    style = MaterialTheme.typography.titleLarge, color = if (game.matchedNow) MX.Lime else MX.Amber, fontWeight = FontWeight.Black,
+                    style = MaterialTheme.typography.titleLarge, color = if (game.matchedNow) MX.Lime else MX.Amber, fontWeight = FontWeight.Bold,
                 )
             }
-            Box(Modifier.fillMaxWidth().height(12.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.1f))) {
+            Box(Modifier.fillMaxWidth().height(10.dp).clip(CircleShape).background(MX.SurfaceHi)) {
                 val windowStart = 1f - game.difficulty.window / game.travel
-                Box(
-                    Modifier.fillMaxHeight().fillMaxWidth().padding(start = 0.dp)
-                        .background(Brush.horizontalGradient(0f to Color.Transparent, windowStart to Color.Transparent, windowStart to MX.Lime.copy(alpha = 0.25f), 1f to MX.Lime.copy(alpha = 0.25f))),
-                )
+                Row(Modifier.fillMaxSize()) {
+                    Box(Modifier.weight(windowStart.coerceIn(0.01f, 0.99f)))
+                    Box(Modifier.weight((1f - windowStart).coerceIn(0.01f, 0.99f)).fillMaxHeight().background(MX.Lime.copy(alpha = 0.3f)))
+                }
                 Box(Modifier.fillMaxHeight().fillMaxWidth(game.progress).clip(CircleShape).background(accent))
             }
             VSpace(4.dp)
-            Box(Modifier.fillMaxWidth().height(6.dp).clip(CircleShape).background(Color.White.copy(alpha = 0.08f))) {
+            Box(Modifier.fillMaxWidth().height(6.dp).clip(CircleShape).background(MX.SurfaceHi)) {
                 Box(Modifier.fillMaxHeight().fillMaxWidth(game.holdProgress).clip(CircleShape).background(MX.Lime))
             }
         }
@@ -278,7 +268,7 @@ private fun BoxScope.GateHud(game: GateGame, accent: Color, showPose: Boolean, o
 @Composable
 private fun Chip(content: @Composable () -> Unit) {
     Box(
-        Modifier.clip(RoundedCornerShape(16.dp)).background(MX.GlassDark).border(1.dp, MX.StrokeSoft, RoundedCornerShape(16.dp))
+        Modifier.clip(RoundedCornerShape(16.dp)).background(MX.GlassDark)
             .padding(horizontal = 12.dp, vertical = 8.dp),
     ) { content() }
 }
@@ -287,35 +277,33 @@ private fun Chip(content: @Composable () -> Unit) {
 private fun BoxScope.OutcomeText(game: GateGame, points: Int) {
     if (game.outcome == GateGame.Outcome.NONE || game.outcomeT > 1.1f) return
     val (txt, col) = when (game.outcome) {
-        GateGame.Outcome.PERFECT -> "★ PERFECT" to MX.Amber
+        GateGame.Outcome.PERFECT -> "PERFECT" to MX.Yellow
         GateGame.Outcome.PASS -> "PASS" to MX.Cyan
         else -> "CRASH" to MX.Coral
     }
     val sub = when {
         game.outcome != GateGame.Outcome.FAIL -> "+$points"
-        game.lives > 0 -> "−1 ♥ · try again"
+        game.lives > 0 -> "Lost a heart, try again"
         else -> "out of hearts"
     }
     Row(
         Modifier.align(Alignment.BottomStart).padding(start = 14.dp, bottom = 64.dp)
             .scale(1f + (0.2f - game.outcomeT).coerceAtLeast(0f))
-            .clip(RoundedCornerShape(18.dp)).background(Color(0xE60A0D1E))
-            .border(1.5.dp, col, RoundedCornerShape(18.dp))
+            .clip(RoundedCornerShape(18.dp)).background(MX.GlassDark)
             .padding(horizontal = 18.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(txt, fontSize = 22.sp, fontWeight = FontWeight.Black, color = col)
+        Text(txt, fontSize = 22.sp, fontWeight = FontWeight.Bold, color = col)
         Text("   $sub", style = MaterialTheme.typography.titleMedium, color = MX.TextHi)
     }
 }
 
 @Composable
 private fun BoxScope.Card(content: @Composable () -> Unit) {
-    Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.55f)))
+    Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.7f)))
     Column(
         Modifier.align(Alignment.Center).widthIn(max = 520.dp).padding(14.dp).clip(RoundedCornerShape(28.dp))
-            .background(Brush.verticalGradient(listOf(Color(0xF51A2050), Color(0xF50C0F26))))
-            .border(1.dp, MX.Cyan.copy(alpha = 0.5f), RoundedCornerShape(28.dp)).padding(22.dp),
+            .background(MX.Surface).padding(22.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) { content() }
 }
@@ -324,7 +312,8 @@ private fun BoxScope.Card(content: @Composable () -> Unit) {
 private fun BoxScope.GetInView(
     hasCam: Boolean, status: PoseTracker.Status, error: String?, request: () -> Unit, resuming: Boolean, onBack: () -> Unit,
 ) = Card {
-    Text("🧍", fontSize = 40.sp)
+    Icon(Ico.PERSON, MX.Cyan, size = 40.dp)
+    VSpace(8.dp)
     Text(if (resuming) "Step back into view" else "Get in position", style = MaterialTheme.typography.headlineMedium, color = MX.TextHi)
     VSpace(6.dp)
     Text(
@@ -332,7 +321,7 @@ private fun BoxScope.GetInView(
             !hasCam -> "Allow the camera to play."
             status == PoseTracker.Status.ERROR -> error ?: "Camera error"
             status != PoseTracker.Status.RUNNING -> "Starting camera…"
-            else -> "Phone sideways at waist height · step back 2–3 m · whole body visible. The game starts when it sees you."
+            else -> "Phone sideways at waist height, step back 2–3 m so your whole body is visible. The game starts when it sees you."
         },
         style = MaterialTheme.typography.bodyMedium, color = MX.TextMid,
     )
@@ -347,7 +336,7 @@ private fun BoxScope.GetInView(
 private fun BoxScope.GatePause(onResume: () -> Unit, onQuit: () -> Unit) = Card {
     Text("Paused", style = MaterialTheme.typography.displayMedium, color = MX.TextHi)
     VSpace(14.dp)
-    GlowButton("Resume", Modifier.fillMaxWidth(), leading = "▶", onClick = onResume)
+    GlowButton("Resume", Modifier.fillMaxWidth(), leading = Ico.PLAY, onClick = onResume)
     VSpace(10.dp)
     GhostButton("Quit", Modifier.fillMaxWidth(), height = 46.dp, accent = MX.Coral, onClick = onQuit)
 }
@@ -356,26 +345,24 @@ private fun BoxScope.GatePause(onResume: () -> Unit, onQuit: () -> Unit) = Card 
 private fun BoxScope.GateOver(game: GateGame, newBest: Boolean, best: Int, accent: Color, onAgain: () -> Unit, onExit: () -> Unit) = Card {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
-            Text("${game.difficulty.emoji} ${game.difficulty.label.uppercase()} · GAME OVER", style = MaterialTheme.typography.labelLarge, color = accent)
-            Text("%,d".format(game.score), style = MaterialTheme.typography.displayLarge, color = MX.TextHi)
+            Text("${game.difficulty.label.uppercase()} · GAME OVER", style = MaterialTheme.typography.labelLarge, color = accent)
+            Text("%,d".format(game.score), fontSize = 52.sp, fontWeight = FontWeight.Bold, color = MX.TextHi)
             Text("Best %,d".format(best), style = MaterialTheme.typography.titleMedium, color = MX.TextMid)
         }
         if (newBest) {
-            Box(Modifier.clip(RoundedCornerShape(14.dp)).background(MX.HotGradient).padding(horizontal = 12.dp, vertical = 8.dp)) {
-                Text("🏆 NEW BEST", fontWeight = FontWeight.Black, color = Color.White)
-            }
+            Pill("NEW BEST", MX.Yellow, icon = Ico.TROPHY)
         }
     }
     VSpace(12.dp)
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         StatTile("${game.passed}/${game.walls}", "Walls", accent, Modifier.weight(1f))
         StatTile("${game.perfects}", "Perfect", MX.Lime, Modifier.weight(1f))
-        StatTile("×${game.bestCombo}", "Combo", MX.Amber, Modifier.weight(1f))
+        StatTile("x${game.bestCombo}", "Combo", MX.Amber, Modifier.weight(1f))
         StatTile("%d:%02d".format(game.time.toInt() / 60, game.time.toInt() % 60), "Time", MX.Violet, Modifier.weight(1f))
     }
     VSpace(14.dp)
     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         GhostButton("Change level", Modifier.weight(1f), onClick = onExit)
-        GlowButton("Play again", Modifier.weight(1.4f), height = 52.dp, leading = "↻", onClick = onAgain)
+        GlowButton("Play again", Modifier.weight(1.4f), height = 50.dp, leading = Ico.REPLAY, color = accent, onClick = onAgain)
     }
 }

@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
@@ -41,10 +42,7 @@ import com.nightwise.motionx.data.Prefs
 import com.nightwise.motionx.games.pose.PoseLibrary
 import com.nightwise.motionx.games.pose.PoseMannequin
 import com.nightwise.motionx.games.pose.Tier
-import com.nightwise.motionx.ui.components.AuroraBackground
-import com.nightwise.motionx.ui.components.GlowButton
-import com.nightwise.motionx.ui.components.ScreenHeader
-import com.nightwise.motionx.ui.components.VSpace
+import com.nightwise.motionx.ui.components.*
 import com.nightwise.motionx.ui.theme.MX
 
 fun tierColor(t: Tier): Color = when (t) {
@@ -63,14 +61,14 @@ fun PoseMapScreen(prefs: Prefs, onBack: () -> Unit, onPlay: (tier: Tier, start: 
     val locked = selected.ordinal > unlocked
     val accent = tierColor(selected)
 
-    AuroraBackground(accentA = MX.Violet, accentB = accent, accentC = MX.Magenta) {
+    AuroraBackground {
         Row(
-            Modifier.fillMaxSize().safeDrawingPadding().padding(horizontal = 20.dp, vertical = 10.dp),
+            Modifier.fillMaxSize().safeDrawingPadding().padding(horizontal = 24.dp, vertical = 14.dp),
             horizontalArrangement = Arrangement.spacedBy(18.dp),
         ) {
             // ---------- left: tiers ----------
-            Column(Modifier.width(280.dp).fillMaxHeight().verticalScroll(rememberScrollState())) {
-                ScreenHeader("Pose Match", "Copy · hold · level up", onBack)
+            Column(Modifier.width(280.dp).fillMaxHeight()) {
+                ScreenHeader("Pose Match", "Copy the pose and hold it", onBack)
                 VSpace(12.dp)
                 Tier.entries.forEach { t ->
                     val tp = PoseLibrary.tier(t)
@@ -79,19 +77,23 @@ fun PoseMapScreen(prefs: Prefs, onBack: () -> Unit, onPlay: (tier: Tier, start: 
                     val sel = t == selected
                     val c = tierColor(t)
                     Row(
-                        Modifier.fillMaxWidth().padding(vertical = 4.dp).clip(RoundedCornerShape(16.dp))
-                            .background(if (sel) c.copy(alpha = 0.16f) else Color.White.copy(alpha = 0.04f))
-                            .border(if (sel) 2.dp else 1.dp, if (sel) c else MX.StrokeSoft, RoundedCornerShape(16.dp))
+                        Modifier.fillMaxWidth().weight(1f).padding(vertical = 3.dp).clip(RoundedCornerShape(14.dp))
+                            .background(MX.Surface)
+                            .border(1.5.dp, if (sel) c else Color.Transparent, RoundedCornerShape(14.dp))
                             .clickable { selected = t }
-                            .padding(horizontal = 14.dp, vertical = 10.dp),
+                            .padding(horizontal = 12.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Text(if (isLocked) "🔒" else t.emoji, fontSize = 22.sp)
+                        Box(
+                            Modifier.size(30.dp).clip(CircleShape).background((if (isLocked) MX.TextLow else c).copy(alpha = 0.16f)),
+                            contentAlignment = Alignment.Center,
+                        ) { Icon(if (isLocked) Ico.LOCK else t.icon(), if (isLocked) MX.TextLow else c, size = 15.dp) }
                         Column(Modifier.weight(1f).padding(start = 12.dp)) {
                             Text(t.label, style = MaterialTheme.typography.titleMedium, color = if (isLocked) MX.TextLow else MX.TextHi)
                             Text("${tp.size} poses · hold ${t.hold.toInt()}s", style = MaterialTheme.typography.labelSmall, color = MX.TextLow)
                         }
-                        Text("★ $stars/${tp.size * 3}", style = MaterialTheme.typography.labelMedium, color = if (stars > 0) MX.Amber else MX.TextLow)
+                        Icon(Ico.STAR, if (stars > 0) MX.Yellow else MX.TextLow, size = 12.dp)
+                        Text(" $stars/${tp.size * 3}", style = MaterialTheme.typography.labelMedium, color = if (stars > 0) MX.TextHi else MX.TextLow)
                     }
                 }
             }
@@ -99,17 +101,21 @@ fun PoseMapScreen(prefs: Prefs, onBack: () -> Unit, onPlay: (tier: Tier, start: 
             Column(Modifier.weight(1f).fillMaxHeight()) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
-                        Text("${selected.emoji}  ${selected.label}", style = MaterialTheme.typography.headlineMedium, color = accent)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(selected.icon(), accent, size = 22.dp)
+                            Box(Modifier.width(10.dp))
+                            Text(selected.label, style = MaterialTheme.typography.headlineMedium, color = MX.TextHi)
+                        }
                         Text(
                             if (locked) "Pass at least half of ${Tier.entries[selected.ordinal - 1].label} to unlock"
-                            else "Poses play one after another · hold each for ${selected.hold.toInt()} s · 20 s per pose",
+                            else "Hold each pose for ${selected.hold.toInt()} s. You get 20 s per pose.",
                             style = MaterialTheme.typography.bodyMedium, color = MX.TextMid,
                         )
                     }
                     GlowButton(
                         if (locked) "Locked" else "Play",
-                        Modifier.width(170.dp), height = 54.dp, leading = if (locked) "🔒" else "▶",
-                        brush = Brush.linearGradient(listOf(accent, MX.Violet)), glow = accent, enabled = !locked,
+                        Modifier.width(160.dp), height = 52.dp, leading = if (locked) Ico.LOCK else Ico.PLAY,
+                        color = accent, enabled = !locked,
                     ) { onPlay(selected, 0) }
                 }
                 VSpace(12.dp)
@@ -122,9 +128,8 @@ fun PoseMapScreen(prefs: Prefs, onBack: () -> Unit, onPlay: (tier: Tier, start: 
                     itemsIndexed(poses, key = { _, p -> p.id }) { i, p ->
                         val stars = prefs.poseStars(p.id)
                         Column(
-                            Modifier.clip(RoundedCornerShape(18.dp))
-                                .background(Brush.verticalGradient(listOf(Color(0xFF1A2050).copy(alpha = 0.8f), Color(0xFF0F1330).copy(alpha = 0.9f))))
-                                .border(1.dp, if (stars > 0) accent.copy(alpha = 0.5f) else MX.StrokeSoft, RoundedCornerShape(18.dp))
+                            Modifier.clip(RoundedCornerShape(16.dp))
+                                .background(MX.Surface)
                                 .clickable(enabled = !locked) { onPlay(selected, i) }
                                 .alpha(if (locked) 0.45f else 1f)
                                 .padding(10.dp),
@@ -135,11 +140,8 @@ fun PoseMapScreen(prefs: Prefs, onBack: () -> Unit, onPlay: (tier: Tier, start: 
                                 Text("${i + 1}", Modifier.align(Alignment.TopStart), style = MaterialTheme.typography.labelMedium, color = MX.TextLow)
                             }
                             Text(p.name, style = MaterialTheme.typography.titleMedium.copy(fontSize = 14.sp), color = MX.TextHi, maxLines = 1)
-                            Row {
-                                repeat(3) { k ->
-                                    Text(if (k < stars) "★" else "☆", color = if (k < stars) MX.Amber else MX.TextLow, fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                                }
-                            }
+                            VSpace(4.dp)
+                            Stars(stars, max = 3, size = 12.dp)
                         }
                     }
                 }

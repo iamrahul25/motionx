@@ -82,16 +82,12 @@ fun DrawScope.drawMannequin(fig: PoseFigure, color: Color, progress: Float, fill
 
     // floor glow under the lowest point
     val floorY = oy + maxY * s + 6f
-    drawOval(
-        Brush.radialGradient(listOf(color.copy(alpha = 0.35f), Color.Transparent), Offset(size.width / 2, floorY), size.width * 0.3f),
-        Offset(size.width * 0.2f, floorY - 10f), Size(size.width * 0.6f, 20f),
-    )
+    drawLine(MX.Stroke, Offset(size.width * 0.25f, floorY), Offset(size.width * 0.75f, floorY), 3f, StrokeCap.Round)
 
     val stroke = s * 0.11f
     val c = lerpColor(color, fillColor, progress)
     fun limb(a: Offset, b: Offset, col: Color, faint: Boolean) {
         val alpha = if (faint) 0.25f else 1f
-        drawLine(col.copy(alpha = 0.22f * alpha), a, b, stroke * 2.4f, StrokeCap.Round)
         drawLine(col.copy(alpha = alpha), a, b, stroke, StrokeCap.Round)
     }
     // torso as a filled tapered quad

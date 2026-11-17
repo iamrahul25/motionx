@@ -43,17 +43,7 @@ import com.nightwise.motionx.data.Prefs
 import com.nightwise.motionx.games.runner.Moves
 import com.nightwise.motionx.games.runner.RunnerConfig
 import com.nightwise.motionx.games.runner.SpeedMode
-import com.nightwise.motionx.ui.components.AuroraBackground
-import com.nightwise.motionx.ui.components.GhostButton
-import com.nightwise.motionx.ui.components.GlassCard
-import com.nightwise.motionx.ui.components.GlowButton
-import com.nightwise.motionx.ui.components.Pill
-import com.nightwise.motionx.ui.components.ScreenHeader
-import com.nightwise.motionx.ui.components.Segmented
-import com.nightwise.motionx.ui.components.StatTile
-import com.nightwise.motionx.ui.components.Stars
-import com.nightwise.motionx.ui.components.TrackArt
-import com.nightwise.motionx.ui.components.VSpace
+import com.nightwise.motionx.ui.components.*
 import com.nightwise.motionx.ui.theme.MX
 
 @Composable
@@ -67,80 +57,71 @@ fun RunnerLobbyScreen(
     onHowTo: () -> Unit,
 ) {
     val totals = remember { prefs.runnerTotals }
-    AuroraBackground(accentA = MX.Magenta, accentB = MX.Cyan, accentC = MX.Violet) {
+    AuroraBackground {
         Row(
-            Modifier.fillMaxSize().safeDrawingPadding().padding(horizontal = 20.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(20.dp),
+            Modifier.fillMaxSize().safeDrawingPadding().padding(horizontal = 24.dp, vertical = 14.dp),
+            horizontalArrangement = Arrangement.spacedBy(22.dp),
         ) {
-            // ---------- left: header + current setup ----------
-            Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState())) {
+            // ---------- left: header + hero ----------
+            Column(Modifier.weight(1f).fillMaxHeight()) {
                 ScreenHeader("Neon Dash", "Hop, jump and duck with your whole body", onBack)
                 VSpace(14.dp)
-                GlassCard(glow = MX.Magenta, padding = 0.dp, corner = 26.dp, onClick = onDifficulty) {
-                    Box(Modifier.fillMaxWidth().height(110.dp)) {
-                        TrackArt(Modifier.fillMaxSize())
-                        Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color(0xEE0F1330)))))
-                        Column(Modifier.align(Alignment.BottomStart).padding(horizontal = 18.dp, vertical = 8.dp)) {
-                            Text("BEST RUN", style = MaterialTheme.typography.labelSmall, color = MX.TextMid)
-                            Text(
-                                if (totals.bestScore > 0) "%,d".format(totals.bestScore) else "Set your first record!",
-                                style = if (totals.bestScore > 0) MaterialTheme.typography.displayMedium else MaterialTheme.typography.headlineMedium,
-                                color = MX.Amber,
-                            )
-                        }
+                Box(Modifier.fillMaxWidth().weight(1f).clip(RoundedCornerShape(20.dp)).background(MX.Surface)) {
+                    TrackArt(Modifier.fillMaxSize())
+                    Column(Modifier.align(Alignment.TopStart).padding(18.dp)) {
+                        Text("BEST RUN", style = MaterialTheme.typography.labelMedium, color = MX.Cyan)
+                        Text(
+                            if (totals.bestScore > 0) "%,d".format(totals.bestScore) else "--",
+                            fontSize = 44.sp, fontWeight = FontWeight.Bold, color = MX.TextHi, letterSpacing = (-1).sp,
+                        )
                     }
-                    Column(Modifier.padding(16.dp)) {
+                }
+                VSpace(12.dp)
+                Row(
+                    Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(MX.Surface)
+                        .clickable(onClick = onDifficulty).padding(horizontal = 14.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(config.icon(), MX.Cyan, size = 20.dp)
+                    Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("${config.emoji}  ${config.preset}", style = MaterialTheme.typography.titleLarge, color = MX.TextHi, modifier = Modifier.weight(1f))
-                            Stars(config.stars)
+                            Text(config.preset, style = MaterialTheme.typography.titleMedium, color = MX.TextHi)
+                            Box(Modifier.width(8.dp))
+                            Stars(config.stars, size = 12.dp)
                         }
-                        VSpace(4.dp)
-                        Text(config.summary, style = MaterialTheme.typography.bodyMedium, color = MX.TextMid)
-                        VSpace(8.dp)
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Pill("Score ×${config.scoreMultiplier}", MX.Lime)
-                            Box(Modifier.weight(1f))
-                            Text("Change ›", style = MaterialTheme.typography.titleMedium, color = MX.Cyan)
-                        }
+                        Text(config.summary, style = MaterialTheme.typography.labelSmall, color = MX.TextLow, maxLines = 1)
                     }
+                    Icon(Ico.CHEVRON, MX.TextLow, size = 16.dp)
                 }
             }
             // ---------- right: actions + totals ----------
-            Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState())) {
-                VSpace(4.dp)
-                GlowButton("Play", Modifier.fillMaxWidth(), height = 64.dp, leading = "▶", onClick = onPlay)
-                VSpace(12.dp)
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    GhostButton("Difficulty", Modifier.weight(1f), leading = "🎚", onClick = onDifficulty)
-                    GhostButton("How to play", Modifier.weight(1f), leading = "❔", onClick = onHowTo)
+            Column(Modifier.weight(1f).fillMaxHeight()) {
+                GlowButton("Play", Modifier.fillMaxWidth(), height = 58.dp, leading = Ico.PLAY, onClick = onPlay)
+                VSpace(10.dp)
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    GhostButton("Difficulty", Modifier.weight(1f), leading = Ico.SLIDERS, onClick = onDifficulty)
+                    GhostButton("How to play", Modifier.weight(1f), leading = Ico.HELP, accent = MX.Violet, onClick = onHowTo)
                 }
-                VSpace(12.dp)
-                GhostButton("Training run", Modifier.fillMaxWidth(), leading = "🎯", accent = MX.Lime, onClick = onTraining)
-                VSpace(4.dp)
-                Text(
-                    "Slow constant speed, unlimited lives, no score — perfect to learn the moves.",
-                    style = MaterialTheme.typography.bodyMedium, color = MX.TextLow,
-                    textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth(),
-                )
+                VSpace(10.dp)
+                GhostButton("Training run", Modifier.fillMaxWidth(), leading = Ico.TARGET, accent = MX.Lime, onClick = onTraining)
                 VSpace(16.dp)
                 Text("YOUR TOTALS", style = MaterialTheme.typography.labelMedium, color = MX.TextLow)
-                VSpace(8.dp)
-                if (totals.runs == 0) {
-                    Text("Your totals will show up here after your first run.", color = MX.TextMid, style = MaterialTheme.typography.bodyMedium)
-                } else {
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        StatTile("${totals.runs}", "Runs", MX.Cyan, Modifier.weight(1f))
-                        StatTile("%.1f km".format(totals.distance / 1000f), "Distance", MX.Violet, Modifier.weight(1f))
-                        StatTile("${totals.seconds / 60} min", "Active", MX.Lime, Modifier.weight(1f))
+                VSpace(10.dp)
+                Column(
+                    Modifier.fillMaxWidth().weight(1f).clip(RoundedCornerShape(16.dp)).background(MX.Surface).padding(16.dp),
+                    verticalArrangement = Arrangement.SpaceEvenly,
+                ) {
+                    Row {
+                        IconStat(Ico.RUN, MX.Lime, "${totals.runs}", Modifier.weight(1f), "runs")
+                        IconStat(Ico.FLAG, MX.Violet, "%.1f".format(totals.distance / 1000f), Modifier.weight(1f), "km")
+                        IconStat(Ico.CLOCK, MX.Cyan, "${totals.seconds / 60}", Modifier.weight(1f), "min")
                     }
-                    VSpace(8.dp)
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        StatTile("${totals.jumps}", "Jumps", MX.Amber, Modifier.weight(1f))
-                        StatTile("${totals.ducks}", "Ducks", MX.Sky, Modifier.weight(1f))
-                        StatTile("${totals.hops}", "Hops", MX.Magenta, Modifier.weight(1f))
+                    Row {
+                        IconStat(Ico.UP, MX.Amber, "${totals.jumps}", Modifier.weight(1f), "jumps")
+                        IconStat(Ico.DOWN, MX.Sky, "${totals.ducks}", Modifier.weight(1f), "ducks")
+                        IconStat(Ico.RIGHT, MX.Magenta, "${totals.hops}", Modifier.weight(1f), "hops")
                     }
                 }
-                VSpace(12.dp)
             }
         }
     }
@@ -151,7 +132,7 @@ fun RunnerLobbyScreen(
 @Composable
 fun RunnerDifficultyScreen(initial: RunnerConfig, onBack: () -> Unit, onSave: (RunnerConfig) -> Unit) {
     var c by remember { mutableStateOf(initial) }
-    AuroraBackground(accentA = MX.Violet, accentB = MX.Lime, accentC = MX.Cyan) {
+    AuroraBackground {
         Column(Modifier.fillMaxSize().safeDrawingPadding().padding(horizontal = 20.dp, vertical = 10.dp)) {
             ScreenHeader("Difficulty", "Pick a level or tune it yourself", onBack) {
                 Column(horizontalAlignment = Alignment.End) {
@@ -171,38 +152,39 @@ fun RunnerDifficultyScreen(initial: RunnerConfig, onBack: () -> Unit, onSave: (R
                         RunnerConfig.PRESETS.forEach { p ->
                             val sel = c.preset == p.preset
                             Column(
-                                Modifier.weight(1f).clip(RoundedCornerShape(18.dp))
-                                    .background(if (sel) MX.Cyan.copy(alpha = 0.18f) else Color.White.copy(alpha = 0.05f))
-                                    .border(if (sel) 2.dp else 1.dp, if (sel) MX.Cyan else MX.StrokeSoft, RoundedCornerShape(18.dp))
+                                Modifier.weight(1f).clip(RoundedCornerShape(16.dp))
+                                    .background(MX.Surface)
+                                    .border(1.5.dp, if (sel) MX.Cyan else Color.Transparent, RoundedCornerShape(16.dp))
                                     .clickable { c = p.copy(assist = c.assist) }
                                     .padding(vertical = 10.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally,
                             ) {
-                                Text(p.emoji, fontSize = 24.sp)
+                                Icon(p.icon(), if (sel) MX.Cyan else MX.TextMid, size = 22.dp)
+                                VSpace(4.dp)
                                 Text(p.preset, style = MaterialTheme.typography.titleMedium, color = if (sel) MX.Cyan else MX.TextHi, maxLines = 1)
-                                Text("Speed ${p.startSpeed}→${p.topSpeed}", style = MaterialTheme.typography.labelSmall, color = MX.TextLow)
+                                Text("Speed ${p.startSpeed} to ${p.topSpeed}", style = MaterialTheme.typography.labelSmall, color = MX.TextLow)
                             }
                         }
                     }
                     VSpace(14.dp)
-                    GlassCard(glow = MX.Cyan, padding = 14.dp) {
+                    GlassCard(padding = 14.dp) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             SpeedDial(c.startSpeed, if (c.mode == SpeedMode.INCREASING) c.topSpeed else null, Modifier.size(120.dp))
                             Box(Modifier.size(14.dp))
                             Column(Modifier.weight(1f)) {
                                 Text("Start speed", style = MaterialTheme.typography.titleMedium, color = MX.TextMid)
-                                Stepper(c.startSpeed, 1, 10) { c = c.copy(startSpeed = it, maxSpeed = maxOf(it, c.maxSpeed), preset = "Custom", emoji = "🎛") }
+                                Stepper(c.startSpeed, 1, 10) { c = c.copy(startSpeed = it, maxSpeed = maxOf(it, c.maxSpeed), preset = "Custom") }
                                 if (c.mode == SpeedMode.INCREASING) {
                                     VSpace(6.dp)
                                     Text("Top speed", style = MaterialTheme.typography.titleMedium, color = MX.TextMid)
-                                    Stepper(c.maxSpeed, c.startSpeed, 10) { c = c.copy(maxSpeed = it, preset = "Custom", emoji = "🎛") }
+                                    Stepper(c.maxSpeed, c.startSpeed, 10) { c = c.copy(maxSpeed = it, preset = "Custom") }
                                 }
                             }
                         }
                         VSpace(12.dp)
                         Segmented(
                             SpeedMode.entries.map { it.label }, c.mode.ordinal,
-                            { c = c.copy(mode = SpeedMode.entries[it], preset = "Custom", emoji = "🎛") }, Modifier.fillMaxWidth(),
+                            { c = c.copy(mode = SpeedMode.entries[it], preset = "Custom") }, Modifier.fillMaxWidth(),
                         )
                         VSpace(6.dp)
                         Text(
@@ -215,9 +197,9 @@ fun RunnerDifficultyScreen(initial: RunnerConfig, onBack: () -> Unit, onSave: (R
                 }
                 // ---------- right: lives, moves, assist ----------
                 Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState())) {
-                    GlassCard(glow = if (c.assist) MX.Lime else null, padding = 14.dp, corner = 18.dp) {
+                    GlassCard(padding = 14.dp, corner = 16.dp) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("🔊", fontSize = 24.sp)
+                            Icon(Ico.SOUND, MX.Lime, size = 22.dp)
                             Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
                                 Text("Voice assist", style = MaterialTheme.typography.titleMedium, color = MX.TextHi)
                                 Text(
@@ -233,8 +215,8 @@ fun RunnerDifficultyScreen(initial: RunnerConfig, onBack: () -> Unit, onSave: (R
                     VSpace(8.dp)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         listOf(1, 2, 3, 5, 0).forEach { l ->
-                            ChoiceChip(if (l == 0) "∞" else "♥ $l", c.lives == l, MX.Magenta, Modifier.weight(1f)) {
-                                c = c.copy(lives = l, preset = "Custom", emoji = "🎛")
+                            ChoiceChip(if (l == 0) "Any" else "$l", c.lives == l, MX.Magenta, Modifier.weight(1f), if (l == 0) Ico.INFINITY else Ico.HEART) {
+                                c = c.copy(lives = l, preset = "Custom")
                             }
                         }
                     }
@@ -244,7 +226,7 @@ fun RunnerDifficultyScreen(initial: RunnerConfig, onBack: () -> Unit, onSave: (R
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Moves.entries.forEach { m ->
                             ChoiceChip(m.label, c.moves == m, MX.Lime, Modifier.fillMaxWidth()) {
-                                c = c.copy(moves = m, preset = "Custom", emoji = "🎛")
+                                c = c.copy(moves = m, preset = "Custom")
                             }
                         }
                     }
@@ -252,7 +234,7 @@ fun RunnerDifficultyScreen(initial: RunnerConfig, onBack: () -> Unit, onSave: (R
                     Text(c.summary, style = MaterialTheme.typography.bodyMedium, color = MX.TextMid)
                     VSpace(6.dp)
                     Text(
-                        "👟 Shoes on · 🧹 Floor clear · 🛑 Stop if dizzy",
+                        "Wear shoes, clear the floor, and stop if you feel dizzy.",
                         style = MaterialTheme.typography.bodyMedium, color = MX.TextLow,
                     )
                     VSpace(12.dp)
@@ -270,18 +252,15 @@ fun SpeedDial(value: Int, top: Int?, modifier: Modifier) {
             val inset = sw / 2 + 2f
             val arcSize = androidx.compose.ui.geometry.Size(size.width - inset * 2, size.height - inset * 2)
             val tl = Offset(inset, inset)
-            drawArc(Color.White.copy(alpha = 0.08f), 135f, 270f, false, tl, arcSize, style = Stroke(sw, cap = StrokeCap.Round))
+            drawArc(MX.Cyan.copy(alpha = 0.16f), 135f, 270f, false, tl, arcSize, style = Stroke(sw, cap = StrokeCap.Round))
             if (top != null && top > value) {
-                drawArc(MX.Magenta.copy(alpha = 0.45f), 135f, 270f * top / 10f, false, tl, arcSize, style = Stroke(sw, cap = StrokeCap.Round))
+                drawArc(MX.Magenta, 135f, 270f * top / 10f, false, tl, arcSize, style = Stroke(sw, cap = StrokeCap.Round))
             }
-            drawArc(
-                Brush.sweepGradient(listOf(MX.Cyan, MX.Violet, MX.Cyan)), 135f, 270f * value / 10f, false, tl, arcSize,
-                style = Stroke(sw, cap = StrokeCap.Round),
-            )
+            drawArc(MX.Cyan, 135f, 270f * value / 10f, false, tl, arcSize, style = Stroke(sw, cap = StrokeCap.Round))
         }
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text("$value", fontSize = 46.sp, fontWeight = FontWeight.Black, color = MX.TextHi)
-            Text(if (top != null && top > value) "→ $top" else "SPEED", style = MaterialTheme.typography.labelMedium, color = if (top != null && top > value) MX.Magenta else MX.Cyan)
+            Text("$value", fontSize = 46.sp, fontWeight = FontWeight.Bold, color = MX.TextHi)
+            Text(if (top != null && top > value) "TO $top" else "SPEED", style = MaterialTheme.typography.labelMedium, color = if (top != null && top > value) MX.Magenta else MX.Cyan)
         }
     }
 }
@@ -289,31 +268,37 @@ fun SpeedDial(value: Int, top: Int?, modifier: Modifier) {
 @Composable
 private fun Stepper(value: Int, min: Int, max: Int, onChange: (Int) -> Unit) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        StepBtn("−", value > min) { onChange(value - 1) }
+        StepBtn(Ico.MINUS, value > min) { onChange(value - 1) }
         Text("$value", Modifier.padding(horizontal = 14.dp), style = MaterialTheme.typography.headlineMedium, color = MX.TextHi)
-        StepBtn("+", value < max) { onChange(value + 1) }
+        StepBtn(Ico.PLUS, value < max) { onChange(value + 1) }
     }
 }
 
 @Composable
-private fun StepBtn(s: String, enabled: Boolean, onClick: () -> Unit) {
+private fun StepBtn(s: Ico, enabled: Boolean, onClick: () -> Unit) {
     Box(
         Modifier.size(40.dp).clip(CircleShape)
-            .background(if (enabled) MX.Cyan.copy(alpha = 0.16f) else Color.White.copy(alpha = 0.04f))
-            .border(1.dp, if (enabled) MX.Cyan.copy(alpha = 0.5f) else MX.StrokeSoft, CircleShape)
+            .background(MX.SurfaceHi)
             .clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center,
-    ) { Text(s, fontSize = 22.sp, color = if (enabled) MX.Cyan else MX.TextLow, fontWeight = FontWeight.Bold) }
+    ) { Icon(s, if (enabled) MX.Cyan else MX.TextLow, size = 16.dp) }
 }
 
 @Composable
-private fun ChoiceChip(label: String, selected: Boolean, accent: Color, modifier: Modifier, onClick: () -> Unit) {
-    Box(
+private fun ChoiceChip(label: String, selected: Boolean, accent: Color, modifier: Modifier, icon: Ico? = null, onClick: () -> Unit) {
+    Row(
         modifier.clip(RoundedCornerShape(14.dp))
-            .background(if (selected) accent.copy(alpha = 0.18f) else Color.White.copy(alpha = 0.05f))
-            .border(if (selected) 2.dp else 1.dp, if (selected) accent else MX.StrokeSoft, RoundedCornerShape(14.dp))
+            .background(MX.Surface)
+            .border(1.5.dp, if (selected) accent else Color.Transparent, RoundedCornerShape(14.dp))
             .clickable(onClick = onClick)
-            .padding(vertical = 12.dp, horizontal = 14.dp),
-        contentAlignment = Alignment.Center,
-    ) { Text(label, style = MaterialTheme.typography.titleMedium, color = if (selected) accent else MX.TextMid) }
+            .padding(vertical = 12.dp, horizontal = 10.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (icon != null) {
+            Icon(icon, if (selected) accent else MX.TextLow, size = 13.dp)
+            Box(Modifier.width(5.dp))
+        }
+        Text(label, style = MaterialTheme.typography.titleMedium, color = if (selected) MX.TextHi else MX.TextMid, maxLines = 1)
+    }
 }

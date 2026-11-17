@@ -39,7 +39,7 @@ data class RunnerConfig(
             append("Speed ").append(startSpeed)
             if (mode == SpeedMode.INCREASING && maxSpeed > startSpeed) append(" → ").append(maxSpeed)
             append(" · ").append(mode.label)
-            append(" · ").append(if (lives == 0) "∞ lives" else "$lives lives")
+            append(" · ").append(if (lives == 0) "Unlimited lives" else "$lives lives")
             append(" · ").append(moves.short)
             if (assist) append(" · Assist")
         }

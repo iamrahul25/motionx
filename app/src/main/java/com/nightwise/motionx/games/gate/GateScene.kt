@@ -138,31 +138,22 @@ fun GateScene(
 private fun DrawScope.drawStage(vp: Offset, time: Float, accent: Color) {
     val w = size.width
     val h = size.height
-    drawRect(Brush.verticalGradient(listOf(Color(0xFF07061A), Color(0xFF2A0B45), Color(0xFF52104A)), endY = vp.y))
-    // sun
-    val sunR = h * 0.2f
-    val sc = Offset(vp.x, vp.y - sunR * 0.3f)
-    drawCircle(Brush.radialGradient(listOf(MX.Magenta.copy(alpha = 0.4f), Color.Transparent), sc, sunR * 2.4f), sunR * 2.4f, sc)
-    drawCircle(Brush.verticalGradient(listOf(MX.Amber, MX.Magenta), sc.y - sunR, sc.y + sunR), sunR, sc)
-    for (i in 0 until 5) drawRect(Color(0xFF3A0B4A), Offset(sc.x - sunR, sc.y + sunR * (0.15f + i * 0.17f)), Size(sunR * 2, 3f + i * 2f))
+    drawRect(MX.Night, Offset.Zero, Size(w, vp.y))
     // floor
-    drawRect(Color(0xFF06051A), Offset(0f, vp.y), Size(w, h - vp.y))
-    drawLine(MX.Magenta, Offset(0f, vp.y), Offset(w, vp.y), 3f)
+    drawRect(MX.Night2, Offset(0f, vp.y), Size(w, h - vp.y))
+    drawLine(MX.Stroke, Offset(0f, vp.y), Offset(w, vp.y), 2f)
     for (i in -14..14) {
         val x = vp.x + i * w * 0.09f
-        drawLine(MX.Violet.copy(alpha = 0.35f), vp, Offset(vp.x + (x - vp.x) * 1f, h), 1.5f)
+        drawLine(Color.White.copy(alpha = 0.06f), vp, Offset(vp.x + (x - vp.x) * 1f, h), 1.5f)
     }
     val scroll = (time * 0.6f) % 1f
     for (j in 0 until 12) {
         val d = ((j + scroll) / 12f).let { it * it }
         val y = vp.y + (h - vp.y) * d
-        drawLine(MX.Violet.copy(alpha = 0.06f + 0.35f * d), Offset(0f, y), Offset(w, y), 1.5f)
+        drawLine(Color.White.copy(alpha = 0.02f + 0.08f * d), Offset(0f, y), Offset(w, y), 1.5f)
     }
     // stage pad under the player
-    drawOval(
-        Brush.radialGradient(listOf(accent.copy(alpha = 0.35f), Color.Transparent), Offset(w / 2, h * 0.96f), w * 0.3f),
-        Offset(w * 0.2f, h * 0.9f), Size(w * 0.6f, h * 0.12f),
-    )
+    drawOval(accent.copy(alpha = 0.6f), Offset(w * 0.3f, h * 0.92f), Size(w * 0.4f, h * 0.06f), style = androidx.compose.ui.graphics.drawscope.Stroke(2f))
 }
 
 private fun DrawScope.drawWall(
@@ -173,13 +164,10 @@ private fun DrawScope.drawWall(
     val holeW = holeWidth * u
     val rim = max(3f, u * 0.06f)
 
-    // glow behind
-    drawRect(accent.copy(alpha = 0.18f * alpha), r.topLeft - Offset(rim * 3, rim * 3), Size(r.width + rim * 6, r.height + rim * 6))
     drawContext.canvas.saveLayer(Rect(Offset.Zero, size), Paint())
     // wall body
     drawRect(
-        Brush.verticalGradient(listOf(Color(0xFF1E2452), Color(0xFF12163A), Color(0xFF0B0E26)), r.top, r.bottom),
-        r.topLeft, r.size, alpha = alpha,
+        MX.SurfaceHi, r.topLeft, r.size, alpha = alpha,
     )
     // bricks
     val rows = 9

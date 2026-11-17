@@ -13,8 +13,8 @@ class RunnerGame(val config: RunnerConfig, seed: Long = System.nanoTime()) {
     enum class Phase { WAITING, COUNTDOWN, RUNNING, PAUSED, OVER }
     enum class Kind { HURDLE, BAR, WALL, COIN, STAR }
     enum class Action(val say: String, val label: String) {
-        LEFT("Move left", "◀ MOVE LEFT"), RIGHT("Move right", "MOVE RIGHT ▶"),
-        JUMP("Hands up, jump", "✋ ▲ JUMP"), DUCK("Duck", "▼ DUCK"),
+        LEFT("Move left", "MOVE LEFT"), RIGHT("Move right", "MOVE RIGHT"),
+        JUMP("Hands up, jump", "HANDS UP, JUMP"), DUCK("Duck", "DUCK"),
     }
 
     class Entity(val kind: Kind, val lane: Int, var z: Float, val y: Float = 0f, val wide: Boolean = false) {
