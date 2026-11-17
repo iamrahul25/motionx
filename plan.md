@@ -112,7 +112,12 @@ Tracking runs on a background executor; the game loop runs on the GL thread; UI 
 - Session: intro → match → hold (3–5 s by tier) → auto-next; 20 s per pose; 1–3 stars by speed; points by tier.
 - Level map: tiers unlock when at least half of the previous tier is passed; best stars saved per pose.
 - Voice: pose name announced, "Perfect!/Great!" on pass.
-- Future: "hole in the wall" — a wall with a pose-shaped hole moves toward you; match the pose to pass through (reuses PoseMatcher).
+
+### Phase 6d — Pose Gate (match the hole) ✅
+- Pseudo-3D synthwave stage: a wall with a pose-shaped hole (cut from the pose's stick figure) flies toward you; your live skeleton is drawn where the hole will arrive, at the same scale, so you see yourself fit through.
+- Judge window before impact (rim glows green): hold the pose long enough → PASS / PERFECT and the wall flies past; otherwise CRASH — the wall shatters, you lose a heart and the same shape comes back as a retry.
+- Levels: Easy (5 ♥, 7.5 s walls, simple shapes, +8° tolerance, wide hole), Medium (3 ♥, 5.8 s, yoga shapes, +4°), Hard (3 ♥, 4.4 s, balance poses, exact). Walls speed up 3% per pass (to 65%).
+- Combo scoring, perfect bonus, best score per level, voice call-outs, auto-start/auto-pause from body visibility.
 
 ### Phase 7 — Polish (next)
 - Synthesized SFX + haptics, voice-style cues ("Jump!") via TextToSpeech option.

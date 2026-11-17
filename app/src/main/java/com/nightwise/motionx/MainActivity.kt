@@ -23,7 +23,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
 import com.nightwise.motionx.audio.Sfx
 import com.nightwise.motionx.data.Prefs
+import com.nightwise.motionx.games.gate.GateDifficulty
 import com.nightwise.motionx.games.pose.Tier
+import com.nightwise.motionx.ui.screens.GateGameScreen
+import com.nightwise.motionx.ui.screens.GateLobbyScreen
 import com.nightwise.motionx.games.runner.RunnerConfig
 import com.nightwise.motionx.ui.screens.PoseMapScreen
 import com.nightwise.motionx.ui.screens.PoseMatchScreen
@@ -44,6 +47,8 @@ sealed interface Screen {
     data class RunnerPlay(val config: RunnerConfig) : Screen
     data object PoseMap : Screen
     data class PosePlay(val tier: Tier, val start: Int) : Screen
+    data object GateLobby : Screen
+    data class GatePlay(val difficulty: GateDifficulty) : Screen
 }
 
 class MainActivity : ComponentActivity() {
@@ -83,7 +88,7 @@ private fun App(prefs: Prefs, sfx: Sfx) {
         homeKey++ // refresh stats on the way back
     }
 
-    BackHandler(enabled = stack.size > 1 && current !is Screen.RunnerPlay && current !is Screen.PosePlay) { pop() }
+    BackHandler(enabled = stack.size > 1 && current !is Screen.RunnerPlay && current !is Screen.PosePlay && current !is Screen.GatePlay) { pop() }
 
     Box(Modifier.fillMaxSize().background(MX.Night)) {
         AnimatedContent(
@@ -93,7 +98,7 @@ private fun App(prefs: Prefs, sfx: Sfx) {
         ) { screen ->
             when (screen) {
                 Screen.Home -> androidx.compose.runtime.key(homeKey) {
-                    HomeScreen(prefs, sfx, onOpenRunner = { push(Screen.RunnerLobby) }, onOpenPose = { push(Screen.PoseMap) })
+                    HomeScreen(prefs, sfx, onOpenRunner = { push(Screen.RunnerLobby) }, onOpenPose = { push(Screen.PoseMap) }, onOpenGate = { push(Screen.GateLobby) })
                 }
                 Screen.RunnerLobby -> androidx.compose.runtime.key(homeKey) {
                     RunnerLobbyScreen(
@@ -121,6 +126,10 @@ private fun App(prefs: Prefs, sfx: Sfx) {
                     },
                 )
                 is Screen.RunnerPlay -> RunnerGameScreen(screen.config, prefs, sfx, onExit = ::pop)
+                Screen.GateLobby -> androidx.compose.runtime.key(homeKey) {
+                    GateLobbyScreen(prefs, onBack = ::pop) { d -> push(Screen.GatePlay(d)) }
+                }
+                is Screen.GatePlay -> GateGameScreen(screen.difficulty, prefs, sfx, onExit = ::pop)
                 Screen.PoseMap -> androidx.compose.runtime.key(homeKey) {
                     PoseMapScreen(prefs, onBack = ::pop) { tier, start -> push(Screen.PosePlay(tier, start)) }
                 }

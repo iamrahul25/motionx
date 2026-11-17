@@ -47,7 +47,7 @@ import com.nightwise.motionx.ui.components.VSpace
 import com.nightwise.motionx.ui.theme.MX
 
 @Composable
-fun HomeScreen(prefs: Prefs, sfx: Sfx, onOpenRunner: () -> Unit, onOpenPose: () -> Unit) {
+fun HomeScreen(prefs: Prefs, sfx: Sfx, onOpenRunner: () -> Unit, onOpenPose: () -> Unit, onOpenGate: () -> Unit) {
     val totals = remember { prefs.runnerTotals }
     var settings by remember { mutableStateOf(false) }
     AuroraBackground {
@@ -127,7 +127,17 @@ fun HomeScreen(prefs: Prefs, sfx: Sfx, onOpenRunner: () -> Unit, onOpenPose: () 
                 VSpace(8.dp)
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     SoonCard("🧘", "Pose Match", "Copy the pose, hold it, level up", MX.Violet, Modifier.weight(1f), pill = "▶ ${PoseLibrary.ALL.size} poses", onClick = onOpenPose)
-                    SoonCard("🫧", "Bubble Pop", "Pop bubbles with hands & feet", MX.Magenta, Modifier.weight(1f))
+                    SoonCard("🧱", "Pose Gate", "Match the hole, pass the wall", MX.Magenta, Modifier.weight(1f), pill = "▶ NEW", onClick = onOpenGate)
+                }
+                VSpace(10.dp)
+                Row(
+                    Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(Color.White.copy(alpha = 0.04f))
+                        .border(1.dp, MX.StrokeSoft, RoundedCornerShape(16.dp)).padding(horizontal = 14.dp, vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text("🫧", fontSize = 20.sp)
+                    Text("  Bubble Pop · pop bubbles with hands & feet", style = MaterialTheme.typography.bodyMedium, color = MX.TextMid, modifier = Modifier.weight(1f))
+                    Pill("🔒 Soon", MX.Violet)
                 }
                 VSpace(12.dp)
                 GlassCard(padding = 12.dp, corner = 18.dp) {

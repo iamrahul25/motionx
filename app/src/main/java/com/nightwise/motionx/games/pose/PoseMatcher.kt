@@ -47,9 +47,9 @@ class PoseFigure(val joints: Map<Joint, FloatArray>, val headCenter: FloatArray,
             j[Joint.SR_ELBOW] = add(j[Joint.SR_SHOULDER]!!, dir(ang(Bone.SR_UPPER_ARM)), UPPER_ARM)
             j[Joint.SR_WRIST] = add(j[Joint.SR_ELBOW]!!, dir(ang(Bone.SR_FOREARM)), FOREARM)
             j[Joint.SL_KNEE] = add(j[Joint.SL_HIP]!!, dir(ang(Bone.SL_THIGH)), THIGH * def.legScaleSL)
-            j[Joint.SL_ANKLE] = add(j[Joint.SL_KNEE]!!, dir(ang(Bone.SL_SHIN)), SHIN * def.legScaleSL)
+            j[Joint.SL_ANKLE] = add(j[Joint.SL_KNEE]!!, dir(ang(Bone.SL_SHIN)), SHIN)
             j[Joint.SR_KNEE] = add(j[Joint.SR_HIP]!!, dir(ang(Bone.SR_THIGH)), THIGH * def.legScaleSR)
-            j[Joint.SR_ANKLE] = add(j[Joint.SR_KNEE]!!, dir(ang(Bone.SR_SHIN)), SHIN * def.legScaleSR)
+            j[Joint.SR_ANKLE] = add(j[Joint.SR_KNEE]!!, dir(ang(Bone.SR_SHIN)), SHIN)
             val head = add(sm, t, 0.36f)
             j[Joint.NOSE] = head
             val free = Bone.entries.filter { it !in def.angles }.toSet()
@@ -199,12 +199,14 @@ object PoseMatcher {
                     is Constraint.Near -> {
                         val a = jointIndex(c.a, swap)
                         val bb = jointIndex(c.b, swap)
-                        v(a) > 0.3f && v(bb) > 0.3f && hypot(x(a) - x(bb), y(a) - y(bb)) / torso <= c.max
+                        v(a) > 0.3f && v(bb) > 0.3f && hypot(x(a) - x(bb), y(a) - y(bb)) / torso <= c.max * def.slack
                     }
                     is Constraint.LegBent -> {
                         val h = jointIndex(if (c.sl) Joint.SL_HIP else Joint.SR_HIP, swap)
+                        val k = jointIndex(if (c.sl) Joint.SL_KNEE else Joint.SR_KNEE, swap)
                         val an = jointIndex(if (c.sl) Joint.SL_ANKLE else Joint.SR_ANKLE, swap)
-                        v(h) > 0.3f && v(an) > 0.3f && hypot(x(an) - x(h), y(an) - y(h)) / torso <= c.maxRatio
+                        val shin = hypot(x(an) - x(k), y(an) - y(k)).coerceAtLeast(1e-3f)
+                        v(h) > 0.3f && v(k) > 0.3f && v(an) > 0.3f && hypot(x(k) - x(h), y(k) - y(h)) / shin <= c.maxRatio * def.slack
                     }
                 }
                 if (!ok) {

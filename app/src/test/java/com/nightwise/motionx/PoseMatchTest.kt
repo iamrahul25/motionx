@@ -54,6 +54,37 @@ class PoseMatchTest {
         }
     }
 
+    /** Joint positions measured from a real phone screenshot of a player doing "hands on hips". */
+    private fun realHandsOnHips(): FloatArray {
+        val pts = mapOf(
+            com.nightwise.motionx.tracking.Lm.NOSE to (1162f to 170f),
+            com.nightwise.motionx.tracking.Lm.L_SHOULDER to (1113f to 220f), com.nightwise.motionx.tracking.Lm.R_SHOULDER to (1207f to 221f),
+            com.nightwise.motionx.tracking.Lm.L_ELBOW to (1072f to 275f), com.nightwise.motionx.tracking.Lm.R_ELBOW to (1240f to 270f),
+            com.nightwise.motionx.tracking.Lm.L_WRIST to (1097f to 332f), com.nightwise.motionx.tracking.Lm.R_WRIST to (1226f to 322f),
+            com.nightwise.motionx.tracking.Lm.L_HIP to (1137f to 380f), com.nightwise.motionx.tracking.Lm.R_HIP to (1190f to 380f),
+            com.nightwise.motionx.tracking.Lm.L_KNEE to (1141f to 497f), com.nightwise.motionx.tracking.Lm.R_KNEE to (1190f to 497f),
+            com.nightwise.motionx.tracking.Lm.L_ANKLE to (1141f to 600f), com.nightwise.motionx.tracking.Lm.R_ANKLE to (1190f to 600f),
+        )
+        val a = FloatArray(33 * 4)
+        for ((i, p) in pts) { a[i * 4] = p.first / 1400f; a[i * 4 + 1] = p.second / 1400f; a[i * 4 + 3] = 0.99f }
+        return a
+    }
+
+    @Test
+    fun realHandsOnHipsPasses() {
+        val r = PoseMatcher.evaluate(PoseLibrary.byId("hips")!!, realHandsOnHips(), 1f)
+        assertTrue("hint=${r.hint} errors=${r.errors.toList()}", r.matched)
+    }
+
+    @Test
+    fun realStandingLegsAreNotASquat() {
+        for (id in listOf("chair", "squatT", "deepsquat", "flamingo")) {
+            val p = PoseLibrary.byId(id)!!
+            val r = PoseMatcher.evaluate(p.copy(tolerance = 90f), realHandsOnHips(), 1f)
+            assertFalse("$id should need bent knees", r.matched)
+        }
+    }
+
     @Test
     fun sessionHoldsThenAutoAdvancesAndTimesOut() {
         val poses = PoseLibrary.tier(Tier.EASY).take(2)

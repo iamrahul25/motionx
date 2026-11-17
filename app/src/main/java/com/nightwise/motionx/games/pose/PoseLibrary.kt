@@ -42,10 +42,14 @@ enum class Joint {
 }
 
 sealed interface Constraint {
-    /** Distance between two joints must be ≤ [max] torso lengths. */
+    /** Distance between two joints must be ≤ [max] torso lengths (hands rest *outside* the hip/head points, so be generous). */
     data class Near(val a: Joint, val b: Joint, val max: Float, val hint: String) : Constraint
 
-    /** Hip-to-ankle distance on one side ≤ [maxRatio] torso lengths (knee bent / leg raised). */
+    /**
+     * Thigh / shin projected length ≤ [maxRatio]. Standing ≈ 1.0; in a squat (or knee raised toward the
+     * camera) the thigh points at the lens and looks much shorter. Unlike leg-vs-torso length this ratio
+     * is barely affected by camera height or tilt.
+     */
     data class LegBent(val sl: Boolean, val maxRatio: Float, val hint: String) : Constraint
 
     fun mirrored(): Constraint = when (this) {
@@ -74,10 +78,12 @@ data class PoseDef(
     val mirrorOk: Boolean = false,
     /** Done side-on to the camera (narrow shoulders/hips in the figure, L/R labels unreliable). */
     val sideView: Boolean = false,
-    /** Drawing only: foreshortening of each leg (1 = full length). */
+    /** Thigh foreshortening per leg (1 = full length) — drawn this way and matches the LegBent ratio. */
     val legScaleSL: Float = 1f,
     val legScaleSR: Float = 1f,
     val tolerance: Float = tier.tolerance,
+    /** Multiplier on constraint limits (> 1 = more forgiving), used by easier game modes. */
+    val slack: Float = 1f,
     val hold: Float = tier.hold,
 ) {
     fun mirrored(): PoseDef = copy(
@@ -136,8 +142,8 @@ object PoseLibrary {
             "hips", "Hands on hips", Tier.EASY, "🦸", "Put both hands on your hips, elbows out",
             m(UPRIGHT, LEGS, a(Bone.SL_UPPER_ARM to 130f, Bone.SL_FOREARM to 50f, Bone.SR_UPPER_ARM to 50f, Bone.SR_FOREARM to 130f)),
             constraints = listOf(
-                Constraint.Near(Joint.SL_WRIST, Joint.SL_HIP, 0.4f, "Hands on your hips"),
-                Constraint.Near(Joint.SR_WRIST, Joint.SR_HIP, 0.4f, "Hands on your hips"),
+                Constraint.Near(Joint.SL_WRIST, Joint.SL_HIP, 0.65f, "Hands on your hips"),
+                Constraint.Near(Joint.SR_WRIST, Joint.SR_HIP, 0.65f, "Hands on your hips"),
             ),
         ),
         PoseDef(
@@ -149,8 +155,8 @@ object PoseLibrary {
             "head", "Hands on head", Tier.EASY, "🤯", "Elbows wide, both hands on top of your head",
             m(UPRIGHT, LEGS, a(Bone.SL_UPPER_ARM to -150f, Bone.SL_FOREARM to -20f, Bone.SR_UPPER_ARM to -30f, Bone.SR_FOREARM to -160f)),
             constraints = listOf(
-                Constraint.Near(Joint.SL_WRIST, Joint.NOSE, 0.5f, "Hands on your head"),
-                Constraint.Near(Joint.SR_WRIST, Joint.NOSE, 0.5f, "Hands on your head"),
+                Constraint.Near(Joint.SL_WRIST, Joint.NOSE, 0.7f, "Hands on your head"),
+                Constraint.Near(Joint.SR_WRIST, Joint.NOSE, 0.7f, "Hands on your head"),
             ),
         ),
 
@@ -159,8 +165,8 @@ object PoseLibrary {
             "chair", "Chair pose", Tier.MEDIUM, "🪑", "Arms up, bend your knees like sitting on a chair",
             m(UPRIGHT, ARMS_UP, a(Bone.SL_THIGH to 100f, Bone.SL_SHIN to 80f, Bone.SR_THIGH to 80f, Bone.SR_SHIN to 100f)),
             constraints = listOf(
-                Constraint.LegBent(true, 1.25f, "Bend your knees more"),
-                Constraint.LegBent(false, 1.25f, "Bend your knees more"),
+                Constraint.LegBent(true, 0.82f, "Bend your knees more"),
+                Constraint.LegBent(false, 0.82f, "Bend your knees more"),
             ),
             legScaleSL = 0.72f, legScaleSR = 0.72f,
         ),
@@ -187,13 +193,13 @@ object PoseLibrary {
                 Bone.SL_UPPER_ARM to -115f, Bone.SL_FOREARM to -50f, Bone.SR_UPPER_ARM to -65f, Bone.SR_FOREARM to -130f,
                 Bone.SL_THIGH to 92f, Bone.SL_SHIN to 90f, Bone.SR_THIGH to 35f, Bone.SR_SHIN to 165f,
             )),
-            constraints = listOf(Constraint.Near(Joint.SL_WRIST, Joint.SR_WRIST, 0.4f, "Palms together overhead")),
+            constraints = listOf(Constraint.Near(Joint.SL_WRIST, Joint.SR_WRIST, 0.55f, "Palms together overhead")),
             mirrorOk = true,
         ),
         PoseDef(
             "flamingo", "Flamingo", Tier.MEDIUM, "🦩", "Arms in a T, lift one knee up high",
             m(UPRIGHT, ARMS_T, a(Bone.SL_THIGH to 92f, Bone.SL_SHIN to 90f, Bone.SR_THIGH to 80f, Bone.SR_SHIN to 95f)),
-            constraints = listOf(Constraint.LegBent(false, 1.0f, "Lift your knee higher")),
+            constraints = listOf(Constraint.LegBent(false, 0.68f, "Lift your knee higher")),
             mirrorOk = true, legScaleSR = 0.55f,
         ),
         PoseDef(
@@ -204,8 +210,8 @@ object PoseLibrary {
             "squatT", "Squat T", Tier.MEDIUM, "🏋️", "Squat down low with arms straight out",
             m(UPRIGHT, ARMS_T, a(Bone.SL_THIGH to 100f, Bone.SL_SHIN to 80f, Bone.SR_THIGH to 80f, Bone.SR_SHIN to 100f)),
             constraints = listOf(
-                Constraint.LegBent(true, 1.1f, "Squat lower"),
-                Constraint.LegBent(false, 1.1f, "Squat lower"),
+                Constraint.LegBent(true, 0.72f, "Squat lower"),
+                Constraint.LegBent(false, 0.72f, "Squat lower"),
             ),
             legScaleSL = 0.6f, legScaleSR = 0.6f,
         ),
@@ -218,10 +224,10 @@ object PoseLibrary {
                 Bone.SL_THIGH to 100f, Bone.SL_SHIN to 80f, Bone.SR_THIGH to 80f, Bone.SR_SHIN to 100f,
             )),
             constraints = listOf(
-                Constraint.LegBent(true, 0.95f, "Go deeper"),
-                Constraint.LegBent(false, 0.95f, "Go deeper"),
-                Constraint.Near(Joint.SL_WRIST, Joint.SL_KNEE, 0.45f, "Hands on your knees"),
-                Constraint.Near(Joint.SR_WRIST, Joint.SR_KNEE, 0.45f, "Hands on your knees"),
+                Constraint.LegBent(true, 0.62f, "Go deeper"),
+                Constraint.LegBent(false, 0.62f, "Go deeper"),
+                Constraint.Near(Joint.SL_WRIST, Joint.SL_KNEE, 0.6f, "Hands on your knees"),
+                Constraint.Near(Joint.SR_WRIST, Joint.SR_KNEE, 0.6f, "Hands on your knees"),
             ),
             legScaleSL = 0.5f, legScaleSR = 0.5f,
         ),
@@ -319,7 +325,7 @@ object PoseLibrary {
                 Bone.SL_UPPER_ARM to -150f, Bone.SL_FOREARM to -150f, Bone.SR_UPPER_ARM to R, Bone.SR_FOREARM to R,
                 Bone.SL_THIGH to D, Bone.SL_SHIN to D, Bone.SR_THIGH to -10f, Bone.SR_SHIN to -110f,
             ),
-            constraints = listOf(Constraint.Near(Joint.SR_WRIST, Joint.SR_ANKLE, 0.45f, "Hold your back foot")),
+            constraints = listOf(Constraint.Near(Joint.SR_WRIST, Joint.SR_ANKLE, 0.6f, "Hold your back foot")),
             mirrorOk = true, sideView = true,
         ),
 

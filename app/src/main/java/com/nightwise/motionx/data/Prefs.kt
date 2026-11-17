@@ -90,6 +90,26 @@ class Prefs(context: Context) {
         get() = sp.getInt("pm_unlocked", 0)
         set(v) = sp.edit().putInt("pm_unlocked", maxOf(v, poseUnlockedTier)).apply()
 
+    // ---------------- Pose Gate ----------------
+
+    fun gateBest(difficulty: String): Int = sp.getInt("gate_best_$difficulty", 0)
+
+    /** Draw the player's live figure on the Pose Gate stage. */
+    var gateShowPlayer: Boolean
+        get() = sp.getBoolean("gate_show_player", true)
+        set(v) = sp.edit().putBoolean("gate_show_player", v).apply()
+
+    var gateLastDifficulty: Int
+        get() = sp.getInt("gate_last", 0)
+        set(v) = sp.edit().putInt("gate_last", v).apply()
+
+    /** Saves the score if it's a new best; returns true when it was. */
+    fun recordGate(difficulty: String, score: Int): Boolean {
+        val best = score > gateBest(difficulty)
+        if (best) sp.edit().putInt("gate_best_$difficulty", score).apply()
+        return best && score > 0
+    }
+
     /** Records a finished run and returns it with [RunResult.newBest] filled in. */
     fun record(r: RunResult): RunResult {
         val t = runnerTotals

@@ -1,8 +1,8 @@
 """MotionX build-and-run helper.
 
 Menu:
-  1. Build the debug APK and run it on a connected phone (USB debugging on).
-  2. Build the debug APK and run it on an Android emulator (AVD).
+  1. Build the debug APK and run it on an Android emulator (AVD).
+  2. Build the debug APK and run it on a connected phone (USB debugging on).
   0. Exit.
 """
 
@@ -185,8 +185,8 @@ def menu():
     print("\n==============================")
     print(" MotionX app runner")
     print("==============================")
-    print(" 1. Run APK on connected phone")
-    print(" 2. Run in emulator")
+    print(" 1. Run in emulator")
+    print(" 2. Run APK on connected phone")
     print(" 0. Exit")
     return input("Select an option: ").strip()
 
@@ -196,9 +196,9 @@ def main():
         try:
             choice = menu()
             if choice == "1":
-                run_on_phone()
-            elif choice == "2":
                 run_on_emulator()
+            elif choice == "2":
+                run_on_phone()
             elif choice == "0":
                 print("Bye.")
                 return

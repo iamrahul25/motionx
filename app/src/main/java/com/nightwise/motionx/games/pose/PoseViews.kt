@@ -124,16 +124,19 @@ private fun lerpColor(a: Color, b: Color, t: Float): Color {
  * green = matches the target, amber = close, red = adjust.
  */
 @Composable
-fun PoseCameraView(frame: PoseFrame?, result: PoseMatcher.Result?, modifier: Modifier = Modifier) {
+fun PoseCameraView(frame: PoseFrame?, result: PoseMatcher.Result?, modifier: Modifier = Modifier, fill: Boolean = false) {
     Canvas(modifier.clipToBounds()) {
         drawRect(Color(0xFF05070F))
         if (frame == null) return@Canvas
         val iw = frame.width.toFloat()
         val ih = frame.height.toFloat()
-        val scale = min(size.width / iw, size.height / ih)
+        val scale = if (fill) max(size.width / iw, size.height / ih) else min(size.width / iw, size.height / ih)
         val dw = iw * scale
         val dh = ih * scale
-        val ox = (size.width - dw) / 2
+        // In fill mode keep the player's hips centred horizontally.
+        val lmh = frame.landmarks
+        val focusX = if (fill && lmh != null && lmh[Lm.L_HIP * 4 + 3] > 0.3f) (lmh[Lm.L_HIP * 4] + lmh[Lm.R_HIP * 4]) / 2 else 0.5f
+        val ox = if (dw > size.width) (size.width / 2 - focusX * dw).coerceIn(size.width - dw, 0f) else (size.width - dw) / 2
         val oy = (size.height - dh) / 2
         drawImage(
             frame.bitmap.asImageBitmap(), IntOffset.Zero, IntSize(frame.width, frame.height),
