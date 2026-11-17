@@ -105,6 +105,15 @@ Tracking runs on a background executor; the game loop runs on the GL thread; UI 
 - **Jump needs both hands raised** above the shoulders + a body rise; sideways hops (which also lift head/hips) can no longer trigger a jump. Extra guard right after a lane change.
 - GPU→CPU automatic fallback when the MediaPipe GPU delegate fails at runtime.
 
+### Phase 6c — Pose Match ✅
+- 31 poses in 5 tiers: Easy (8) · Medium (8) · Hard (7) · Very hard (5) · Extreme (4), from "Stand tall" to handstands.
+- Matching by bone *directions* (torso, upper arms, forearms, thighs, shins) so body size/distance don't matter, plus joint constraints (hands on hips, palms together, knees bent). Asymmetric poses accept either side; side-on poses tolerate left/right label swaps.
+- Neon mannequin reference that fills up as you hold; live camera skeleton coloured per limb (green matched / amber close / red adjust) + match %.
+- Session: intro → match → hold (3–5 s by tier) → auto-next; 20 s per pose; 1–3 stars by speed; points by tier.
+- Level map: tiers unlock when at least half of the previous tier is passed; best stars saved per pose.
+- Voice: pose name announced, "Perfect!/Great!" on pass.
+- Future: "hole in the wall" — a wall with a pose-shaped hole moves toward you; match the pose to pass through (reuses PoseMatcher).
+
 ### Phase 7 — Polish (next)
 - Synthesized SFX + haptics, voice-style cues ("Jump!") via TextToSpeech option.
 - Performance pass (frame pacing, GC-free render loop), low-end device mode (lite model).

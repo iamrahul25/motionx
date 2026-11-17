@@ -76,6 +76,20 @@ class Prefs(context: Context) {
             sp.getInt("t_jumps", 0), sp.getInt("t_ducks", 0), sp.getInt("t_hops", 0),
         )
 
+    // ---------------- Pose Match progress ----------------
+
+    fun poseStars(id: String): Int = sp.getInt("pm_stars_$id", 0)
+
+    /** Keeps the best star count for a pose. */
+    fun recordPoseStars(id: String, stars: Int) {
+        if (stars > poseStars(id)) sp.edit().putInt("pm_stars_$id", stars).apply()
+    }
+
+    /** Highest unlocked Pose Match tier (ordinal). */
+    var poseUnlockedTier: Int
+        get() = sp.getInt("pm_unlocked", 0)
+        set(v) = sp.edit().putInt("pm_unlocked", maxOf(v, poseUnlockedTier)).apply()
+
     /** Records a finished run and returns it with [RunResult.newBest] filled in. */
     fun record(r: RunResult): RunResult {
         val t = runnerTotals

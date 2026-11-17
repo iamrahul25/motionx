@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.nightwise.motionx.audio.Sfx
 import com.nightwise.motionx.data.Prefs
+import com.nightwise.motionx.games.pose.PoseLibrary
 import com.nightwise.motionx.ui.components.AuroraBackground
 import com.nightwise.motionx.ui.components.GlassCard
 import com.nightwise.motionx.ui.components.Pill
@@ -46,7 +47,7 @@ import com.nightwise.motionx.ui.components.VSpace
 import com.nightwise.motionx.ui.theme.MX
 
 @Composable
-fun HomeScreen(prefs: Prefs, sfx: Sfx, onOpenRunner: () -> Unit) {
+fun HomeScreen(prefs: Prefs, sfx: Sfx, onOpenRunner: () -> Unit, onOpenPose: () -> Unit) {
     val totals = remember { prefs.runnerTotals }
     var settings by remember { mutableStateOf(false) }
     AuroraBackground {
@@ -122,10 +123,10 @@ fun HomeScreen(prefs: Prefs, sfx: Sfx, onOpenRunner: () -> Unit) {
                     ) { Text("⚙", fontSize = 22.sp, color = MX.TextHi) }
                 }
                 VSpace(16.dp)
-                Text("COMING SOON", style = MaterialTheme.typography.labelMedium, color = MX.TextLow)
+                Text("MORE GAMES", style = MaterialTheme.typography.labelMedium, color = MX.TextLow)
                 VSpace(8.dp)
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    SoonCard("🧘", "Pose Match", "Copy the pose, hold it, level up", MX.Violet, Modifier.weight(1f))
+                    SoonCard("🧘", "Pose Match", "Copy the pose, hold it, level up", MX.Violet, Modifier.weight(1f), pill = "▶ ${PoseLibrary.ALL.size} poses", onClick = onOpenPose)
                     SoonCard("🫧", "Bubble Pop", "Pop bubbles with hands & feet", MX.Magenta, Modifier.weight(1f))
                 }
                 VSpace(12.dp)
@@ -154,8 +155,16 @@ private fun Metric(value: String, label: String, color: Color) {
 }
 
 @Composable
-private fun SoonCard(emoji: String, title: String, sub: String, accent: Color, modifier: Modifier) {
-    GlassCard(modifier, padding = 16.dp, corner = 22.dp) {
+private fun SoonCard(
+    emoji: String,
+    title: String,
+    sub: String,
+    accent: Color,
+    modifier: Modifier,
+    pill: String = "🔒 Soon",
+    onClick: (() -> Unit)? = null,
+) {
+    GlassCard(modifier, padding = 16.dp, corner = 22.dp, glow = if (onClick != null) accent else null, onClick = onClick) {
         Box(
             Modifier.size(52.dp).clip(RoundedCornerShape(16.dp))
                 .background(Brush.linearGradient(listOf(accent.copy(alpha = 0.45f), accent.copy(alpha = 0.12f)))),
@@ -165,7 +174,7 @@ private fun SoonCard(emoji: String, title: String, sub: String, accent: Color, m
         Text(title, style = MaterialTheme.typography.titleLarge, color = MX.TextHi)
         Text(sub, style = MaterialTheme.typography.bodyMedium, color = MX.TextMid, minLines = 2, maxLines = 2)
         VSpace(10.dp)
-        Pill("🔒 Soon", accent)
+        Pill(pill, accent)
     }
 }
 
