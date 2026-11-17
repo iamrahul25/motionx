@@ -22,5 +22,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "First-App"
+rootProject.name = "MotionX"
 include(":app")

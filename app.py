@@ -1,4 +1,4 @@
-"""DualCam / time-wise build-and-run helper.
+"""MotionX build-and-run helper.
 
 Menu:
   1. Build the debug APK and run it on a connected phone (USB debugging on).
@@ -13,7 +13,7 @@ import sys
 import time
 
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
-PACKAGE = "com.example.first_app"
+PACKAGE = "com.nightwise.motionx"
 LAUNCH_COMPONENT = f"{PACKAGE}/{PACKAGE}.MainActivity"
 IS_WINDOWS = os.name == "nt"
 GRADLEW = os.path.join(PROJECT_DIR, "gradlew.bat" if IS_WINDOWS else "gradlew")
@@ -183,7 +183,7 @@ def run_on_emulator():
 
 def menu():
     print("\n==============================")
-    print(" DualCam app runner")
+    print(" MotionX app runner")
     print("==============================")
     print(" 1. Run APK on connected phone")
     print(" 2. Run in emulator")
